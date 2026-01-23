@@ -158,6 +158,137 @@ function escapeHtml(str) {
         .replace(/'/g,"&#039;");
 }
 
+
+// =============================
+// UI helpers (toast / download / pair builder)
+// =============================
+function showToast(msg, type="info", ms=2600) {
+    const el = document.getElementById("toast");
+    if (!el) return;
+    el.className = "toast toast-" + type;
+    el.textContent = msg;
+    el.style.display = "block";
+    el.style.opacity = "1";
+    clearTimeout(el.__t);
+    el.__t = setTimeout(() => {
+        el.style.opacity = "0";
+        setTimeout(()=>{ el.style.display = "none"; }, 250);
+    }, ms);
+}
+
+function downloadCode(codeId, filename="script.m") {
+    const el = document.getElementById(codeId);
+    if (!el) return;
+    const txt = el.textContent || "";
+    const blob = new Blob([txt], { type: "text/plain;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+    showToast("Descargado: " + filename, "ok");
+}
+
+// Pair builder store
+const pairStore = Object.create(null);
+
+function addPair(prefix, mapInputId) {
+    const xEl = document.getElementById(prefix + "PairX");
+    const yEl = document.getElementById(prefix + "PairY");
+    const listEl = document.getElementById(prefix + "PairsList");
+    const mapEl = document.getElementById(mapInputId);
+
+    if (!xEl || !yEl || !listEl || !mapEl) return;
+
+    const x = (xEl.value || "").trim();
+    const y = (yEl.value || "").trim();
+    if (!x || !y) {
+        showToast("Completa x e y.", "warn");
+        return;
+    }
+
+    pairStore[prefix] = pairStore[prefix] || [];
+    const idx = pairStore[prefix].findIndex(p => p[0] === x);
+    if (idx >= 0) pairStore[prefix][idx] = [x, y];
+    else pairStore[prefix].push([x, y]);
+
+    xEl.value = ""; yEl.value = "";
+    syncPairs(prefix, mapInputId);
+}
+
+function removePair(prefix, mapInputId, encodedX) {
+    const x = decodeURIComponent(encodedX || "");
+    pairStore[prefix] = (pairStore[prefix] || []).filter(p => p[0] !== x);
+    syncPairs(prefix, mapInputId);
+}
+
+function clearPairs(prefix, mapInputId) {
+    pairStore[prefix] = [];
+    syncPairs(prefix, mapInputId);
+    showToast("Pares borrados.", "info");
+}
+
+function syncPairs(prefix, mapInputId) {
+    const listEl = document.getElementById(prefix + "PairsList");
+    const mapEl = document.getElementById(mapInputId);
+    if (!listEl || !mapEl) return;
+
+    const arr = pairStore[prefix] || [];
+    mapEl.value = arr.map(([x,y]) => `${x}->${y}`).join(", ");
+
+    if (!arr.length) {
+        listEl.innerHTML = `<span class="pairs-empty">Sin pares (usa + para agregar)</span>`;
+        return;
+    }
+
+    listEl.innerHTML = arr.map(([x,y]) => {
+        const ex = encodeURIComponent(x);
+        return `<span class="pair-chip"><strong>${escapeHtml(x)}</strong>→${escapeHtml(y)} <button class="chip-x" onclick="removePair('${prefix}','${mapInputId}','${ex}')">×</button></span>`;
+    }).join("");
+}
+
+// When user writes mapping manually, try to reflect it into the builder list
+function syncPairsFromInput(prefix, mapInputId) {
+    const mapEl = document.getElementById(mapInputId);
+    if (!mapEl) return;
+    const parsed = parseMapping(mapEl.value);
+    if (parsed.errors.length) return; // don't overwrite with bad input
+    pairStore[prefix] = parsed.pairs.map(([x,y]) => [x,y]);
+    syncPairs(prefix, mapInputId);
+}
+
+function clearSection(sectionId) {
+    if (sectionId === "clasificacion") {
+        ["classDomain","classCodomain","classMap","classPairX","classPairY"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=""; });
+        const out = document.getElementById("classResult"); if(out) out.textContent="Esperando entrada...";
+        const wrap = document.getElementById("classMatlabWrap"); if(wrap) wrap.style.display="none";
+        pairStore["class"] = []; syncPairs("class","classMap");
+    }
+    if (sectionId === "inversa") {
+        ["invDomain","invCodomain","invMap","invQuery","invPairX","invPairY"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=""; });
+        const out = document.getElementById("invResult"); if(out) out.textContent="Esperando entrada...";
+        const wrap = document.getElementById("invMatlabWrap"); if(wrap) wrap.style.display="none";
+        pairStore["inv"] = []; syncPairs("inv","invMap");
+    }
+    if (sectionId === "compuesta") {
+        ["compDomain","compMid","compCodomain","compMapF","compMapG","compFPairX","compFPairY","compGPairX","compGPairY"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=""; });
+        const out = document.getElementById("compResult"); if(out) out.textContent="Esperando entrada...";
+        const wrap = document.getElementById("compMatlabWrap"); if(wrap) wrap.style.display="none";
+        pairStore["compF"] = []; pairStore["compG"] = [];
+        syncPairs("compF","compMapF"); syncPairs("compG","compMapG");
+    }
+    if (sectionId === "discreta") {
+        ["discX","discY"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=""; });
+        const out = document.getElementById("discResult"); if(out) out.textContent="Esperando entrada...";
+        const wrap = document.getElementById("discMatlabWrap"); if(wrap) wrap.style.display="none";
+        const canvas = document.getElementById("discCanvas");
+        if (canvas && canvas.getContext) canvas.getContext("2d").clearRect(0,0,canvas.width,canvas.height);
+    }
+    showToast("Listo: sección limpia.", "ok");
+}
+
 function pairsTable(pairs, h1="x", h2="f(x)") {
     const rows = pairs.map(([a,b]) => `<tr><td>${escapeHtml(a)}</td><td>${escapeHtml(b)}</td></tr>`).join("");
     return `<table class="mini-table"><thead><tr><th>${escapeHtml(h1)}</th><th>${escapeHtml(h2)}</th></tr></thead><tbody>${rows}</tbody></table>`;
@@ -191,6 +322,7 @@ async function copyCode(codeId) {
     try {
         if (navigator.clipboard && navigator.clipboard.writeText) {
             await navigator.clipboard.writeText(txt);
+            showToast("Copiado ✓", "ok");
         } else {
             throw new Error("no clipboard");
         }
@@ -203,6 +335,7 @@ async function copyCode(codeId) {
         ta.select();
         document.execCommand("copy");
         document.body.removeChild(ta);
+        showToast("Copiado ✓", "ok");
     }
 }
 
@@ -488,8 +621,8 @@ fMap = containers.Map(Xf, Yf);
 
 // --------- DISCRETA ----------
 function plotDiscrete() {
-    const xs = parseList(document.getElementById("discX")?.value).map(Number);
-    const ys = parseList(document.getElementById("discY")?.value).map(Number);
+    let xs = parseList(document.getElementById("discX")?.value).map(Number);
+    let ys = parseList(document.getElementById("discY")?.value).map(Number);
     const out = document.getElementById("discResult");
     const canvas = document.getElementById("discCanvas");
 
@@ -504,32 +637,48 @@ function plotDiscrete() {
         return;
     }
 
+    // opciones
+    const plotType = document.getElementById("discPlotType")?.value || "stem";
+    const useGrid = !!document.getElementById("discGrid")?.checked;
+    const sortX = !!document.getElementById("discSortX")?.checked;
+
+    if (sortX) {
+        const zipped = xs.map((x,i)=>({x, y: ys[i]})).sort((a,b)=>a.x-b.x);
+        xs = zipped.map(p=>p.x);
+        ys = zipped.map(p=>p.y);
+    }
+
     const pairs = xs.map((x,i)=>[String(x), String(ys[i])]);
     out.innerHTML = badge("Datos cargados", "ok") + `<div style="margin-top:12px">${pairsTable(pairs,"x","f(x)")}</div>`;
 
     if (canvas && canvas.getContext) {
-        drawDiscretePlot(canvas, xs, ys);
+        drawDiscretePlot(canvas, xs, ys, { plotType, useGrid });
+        ensurePlotTooltip(canvas);
     }
 
     const matlab =
-`% FUNCIÓN DISCRETA (gráfica tipo stem)
+`% FUNCIÓN DISCRETA (gráfica)
 x = [${xs.join(" ")}];
 y = [${ys.join(" ")}];
 
-stem(x, y, 'filled');
-grid on;
+% stem / plot / scatter
+${plotType === "stem" ? "stem(x, y, 'filled');" : plotType === "line" ? "plot(x, y, '-o');" : "scatter(x, y, 'filled');"}
+grid ${useGrid ? "on" : "off"};
 xlabel('x'); ylabel('f(x)');
 title('Función discreta');`;
     setMatlab("discMatlab","discMatlabWrap", matlab, true);
 }
 
-function drawDiscretePlot(canvas, xs, ys) {
+function drawDiscretePlot(canvas, xs, ys, opts={}) {
     const ctx = canvas.getContext("2d");
     const w = canvas.width, h = canvas.height;
     ctx.clearRect(0,0,w,h);
 
+    const plotType = opts.plotType || "stem";
+    const useGrid = !!opts.useGrid;
+
     // margins
-    const mx = 40, my = 30;
+    const mx = 48, my = 34;
 
     // ranges
     const minX = Math.min(...xs), maxX = Math.max(...xs);
@@ -541,6 +690,19 @@ function drawDiscretePlot(canvas, xs, ys) {
     const xToPx = x => mx + (x - minX) * xScale;
     const yToPx = y => h - my - (y - minY) * yScale;
 
+    // grid
+    if (useGrid) {
+        ctx.strokeStyle = "rgba(255,255,255,0.08)";
+        ctx.lineWidth = 1;
+        const n = 6;
+        for (let i=1;i<n;i++){
+            const gx = mx + i*(w-2*mx)/n;
+            const gy = my + i*(h-2*my)/n;
+            ctx.beginPath(); ctx.moveTo(gx,my); ctx.lineTo(gx,h-my); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(mx,gy); ctx.lineTo(w-mx,gy); ctx.stroke();
+        }
+    }
+
     // axes
     ctx.strokeStyle = "rgba(255,255,255,0.6)";
     ctx.lineWidth = 1;
@@ -550,19 +712,46 @@ function drawDiscretePlot(canvas, xs, ys) {
     ctx.lineTo(w-mx, h-my);
     ctx.stroke();
 
-    // stems
+    // ticks labels (simple)
+    ctx.fillStyle = "rgba(255,255,255,0.75)";
+    ctx.font = "12px Exo 2, sans-serif";
+    ctx.fillText(String(minX), mx, h-my+18);
+    ctx.fillText(String(maxX), w-mx-18, h-my+18);
+    ctx.fillText(String(maxY), 8, my+4);
+    ctx.fillText(String(minY), 8, h-my);
+
+    // points for tooltip
+    const points = xs.map((x,i)=>({
+        x, y: ys[i],
+        px: xToPx(x),
+        py: yToPx(ys[i]),
+        p0: yToPx(0)
+    }));
+    canvas.__points = points;
+
+    // draw
     ctx.strokeStyle = "rgba(255, 215, 0, 0.9)";
     ctx.fillStyle = "rgba(255, 215, 0, 0.9)";
-    xs.forEach((x,i)=>{
-        const px = xToPx(x);
-        const py = yToPx(ys[i]);
-        const p0 = yToPx(0);
+    ctx.lineWidth = 2;
+
+    if (plotType === "line") {
         ctx.beginPath();
-        ctx.moveTo(px, p0);
-        ctx.lineTo(px, py);
+        points.forEach((p, i)=>{
+            if(i===0) ctx.moveTo(p.px, p.py);
+            else ctx.lineTo(p.px, p.py);
+        });
         ctx.stroke();
+    }
+
+    points.forEach((p)=>{
+        if (plotType === "stem") {
+            ctx.beginPath();
+            ctx.moveTo(p.px, p.p0);
+            ctx.lineTo(p.px, p.py);
+            ctx.stroke();
+        }
         ctx.beginPath();
-        ctx.arc(px, py, 4, 0, Math.PI*2);
+        ctx.arc(p.px, p.py, 4, 0, Math.PI*2);
         ctx.fill();
     });
 }
@@ -590,7 +779,17 @@ function stars(n) {
 
 function renderReviews() {
     const list = document.getElementById("reviewsList");
+    const avgEl = document.getElementById("avgRating");
     if (!list) return;
+
+    // promedio
+    if (avgEl) {
+        if (!arr.length) { avgEl.textContent = "—"; }
+        else {
+            const avg = arr.reduce((s,r)=>s + Number(r.rating||0), 0) / arr.length;
+            avgEl.textContent = avg.toFixed(1) + " ★";
+        }
+    }
     const arr = loadReviews();
     if (arr.length === 0) {
         list.innerHTML = `<div class="review-card"><div class="review-text">Aún no hay reseñas.</div></div>`;
@@ -652,6 +851,76 @@ function clearReviews() {
 // Inicialización segura
 document.addEventListener("DOMContentLoaded", () => {
     try { renderReviews(); } catch {}
+    // pair-builder sync on blur
+    [["class","classMap"],["inv","invMap"],["compF","compMapF"],["compG","compMapG"]].forEach(([p,id])=>{
+        const el=document.getElementById(id);
+        if(el){ el.addEventListener("blur", ()=>syncPairsFromInput(p,id)); syncPairs(p,id); }
+    });
+    // star picker
+    initStarPicker();
 });
 
 window.__MC_APP_LOADED__ = true;
+
+
+function ensurePlotTooltip(canvas) {
+    if (canvas.__tooltipBound) return;
+    canvas.__tooltipBound = true;
+    const tip = document.getElementById("plotTip");
+    if (!tip) return;
+
+    canvas.addEventListener("mousemove", (e) => {
+        const pts = canvas.__points || [];
+        if (!pts.length) return;
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        // nearest point
+        let best = null, bestD = Infinity;
+        for (const p of pts) {
+            const d = (p.px - mx)*(p.px - mx) + (p.py - my)*(p.py - my);
+            if (d < bestD) { bestD = d; best = p; }
+        }
+        if (best && bestD < 250) {
+            tip.style.display = "block";
+            tip.innerHTML = `x = <strong>${escapeHtml(best.x)}</strong><br>f(x) = <strong>${escapeHtml(best.y)}</strong>`;
+            tip.style.left = (e.pageX + 12) + "px";
+            tip.style.top = (e.pageY + 12) + "px";
+        } else {
+            tip.style.display = "none";
+        }
+    });
+    canvas.addEventListener("mouseleave", () => {
+        const tip = document.getElementById("plotTip");
+        if (tip) tip.style.display = "none";
+    });
+}
+
+
+function initStarPicker() {
+    const picker = document.getElementById("starPicker");
+    const sel = document.getElementById("revRating");
+    if (!picker || !sel) return;
+
+    function paint(v) {
+        const stars = picker.querySelectorAll(".star");
+        stars.forEach(btn=>{
+            const n = Number(btn.dataset.v);
+            btn.classList.toggle("on", n <= v);
+        });
+    }
+
+    const v0 = Number(sel.value || 5);
+    paint(v0);
+
+    picker.addEventListener("click", (e)=>{
+        const btn = e.target.closest(".star");
+        if (!btn) return;
+        const v = Number(btn.dataset.v);
+        sel.value = String(v);
+        paint(v);
+        showToast("Rating: " + v + "/5", "info", 1200);
+    });
+
+    sel.addEventListener("change", ()=>paint(Number(sel.value||5)));
+}
