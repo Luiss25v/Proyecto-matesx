@@ -247,12 +247,25 @@ end</code></pre>
                             <div class="input-group">
                                 <input type="text" id="classDomain" placeholder="Dominio A (ej: 1,2,3)">
                                 <input type="text" id="classCodomain" placeholder="Codominio B (ej: a,b,c)">
-                                <input type="text" id="classMap" placeholder="Mapeo (ej: 1->a, 2->b, 3->c)">
+                                <input type="text" id="classMap" placeholder="Mapeo (ej: 1->
+                            <div class="pair-builder" data-prefix="class">
+                                <div class="pair-row">
+                                    <input type="text" id="classPairX" placeholder="x">
+                                    <span class="arrow">→</span>
+                                    <input type="text" id="classPairY" placeholder="y">
+                                    <button class="icon-btn" onclick="addPair('class', 'classMap')" title="Agregar par"><i class="fas fa-plus"></i></button>
+                                    <button class="icon-btn" onclick="clearPairs('class', 'classMap')" title="Borrar pares"><i class="fas fa-trash"></i></button>
+                                </div>
+                                <div class="pair-hint">Tip: también puedes escribir “1-&gt;a, 2-&gt;b”. Si repites x, se reemplaza.</div>
+                                <div id="classPairsList" class="pairs-list"></div>
+                            </div>
+a, 2->b, 3->c)">
                             </div>
 
                             <button class="run-btn" onclick="classifyFunction()">ANALIZAR</button>
                             <div class="mini-actions">
                                 <button class="sub-btn" onclick="document.getElementById('classDomain').value='1,2,3';document.getElementById('classCodomain').value='a,b,c';document.getElementById('classMap').value='1->a,2->b,3->c';classifyFunction();">EJEMPLO</button>
+                                <button class="sub-btn" onclick="clearSection('clasificacion')">LIMPIAR</button>
                             </div>
 
                             <div class="result-display" id="classResult">Esperando entrada...</div>
@@ -261,6 +274,7 @@ end</code></pre>
                         <div class="code-panel">
                             <div class="code-head">
                                 <button class="matlab-toggle" onclick="toggleMatlab('classMatlabWrap', this)">Ver MATLAB</button>
+                                <button class="icon-btn" onclick="downloadCode(\'classMatlab\', \'clasificacion.m\')" title="Descargar .m"><i class="fas fa-download"></i></button>
                                 <button class="icon-btn" onclick="copyCode('classMatlab')" title="Copiar">
                                     <i class="fas fa-copy"></i>
                                 </button>
@@ -290,13 +304,26 @@ end</code></pre>
                             <div class="input-group">
                                 <input type="text" id="invDomain" placeholder="Dominio A (ej: 1,2,3)">
                                 <input type="text" id="invCodomain" placeholder="Codominio B (ej: a,b,c)">
-                                <input type="text" id="invMap" placeholder="Mapeo (ej: 1->a,2->b,3->c)">
+                                <input type="text" id="invMap" placeholder="Mapeo (ej: 1->
+                            <div class="pair-builder" data-prefix="inv">
+                                <div class="pair-row">
+                                    <input type="text" id="invPairX" placeholder="x">
+                                    <span class="arrow">→</span>
+                                    <input type="text" id="invPairY" placeholder="y">
+                                    <button class="icon-btn" onclick="addPair('inv', 'invMap')" title="Agregar par"><i class="fas fa-plus"></i></button>
+                                    <button class="icon-btn" onclick="clearPairs('inv', 'invMap')" title="Borrar pares"><i class="fas fa-trash"></i></button>
+                                </div>
+                                <div class="pair-hint">Tip: también puedes escribir “1-&gt;a, 2-&gt;b”. Si repites x, se reemplaza.</div>
+                                <div id="invPairsList" class="pairs-list"></div>
+                            </div>
+a,2->b,3->c)">
                                 <input type="text" id="invQuery" placeholder="Consulta y (ej: b)">
                             </div>
 
                             <button class="run-btn" onclick="invertFunction()">CALCULAR</button>
                             <div class="mini-actions">
                                 <button class="sub-btn" onclick="document.getElementById('invDomain').value='1,2,3';document.getElementById('invCodomain').value='a,b,c';document.getElementById('invMap').value='1->a,2->b,3->c';document.getElementById('invQuery').value='b';invertFunction();">EJEMPLO</button>
+                                <button class="sub-btn" onclick="clearSection('inversa')">LIMPIAR</button>
                             </div>
 
                             <div class="result-display" id="invResult">Esperando entrada...</div>
@@ -305,6 +332,7 @@ end</code></pre>
                         <div class="code-panel">
                             <div class="code-head">
                                 <button class="matlab-toggle" onclick="toggleMatlab('invMatlabWrap', this)">Ver MATLAB</button>
+                                <button class="icon-btn" onclick="downloadCode(\'invMatlab\', \'inversa.m\')" title="Descargar .m"><i class="fas fa-download"></i></button>
                                 <button class="icon-btn" onclick="copyCode('invMatlab')" title="Copiar">
                                     <i class="fas fa-copy"></i>
                                 </button>
@@ -335,13 +363,38 @@ end</code></pre>
                                 <input type="text" id="compDomain" placeholder="A (ej: 1,2,3)">
                                 <input type="text" id="compMid" placeholder="B (ej: a,b,c)">
                                 <input type="text" id="compCodomain" placeholder="C (ej: X,Y,Z)">
-                                <input type="text" id="compMapF" placeholder="f: A->B (ej: 1->a,2->b,3->c)">
-                                <input type="text" id="compMapG" placeholder="g: B->C (ej: a->X,b->Y,c->Z)">
+                                <input type="text" id="compMapF" placeholder="f: A->
+                            <div class="pair-builder" data-prefix="compF">
+                                <div class="pair-row">
+                                    <input type="text" id="compFPairX" placeholder="x">
+                                    <span class="arrow">→</span>
+                                    <input type="text" id="compFPairY" placeholder="y">
+                                    <button class="icon-btn" onclick="addPair('compF', 'compMapF')" title="Agregar par"><i class="fas fa-plus"></i></button>
+                                    <button class="icon-btn" onclick="clearPairs('compF', 'compMapF')" title="Borrar pares"><i class="fas fa-trash"></i></button>
+                                </div>
+                                <div class="pair-hint">Tip: también puedes escribir “1-&gt;a, 2-&gt;b”. Si repites x, se reemplaza.</div>
+                                <div id="compFPairsList" class="pairs-list"></div>
+                            </div>
+B (ej: 1->a,2->b,3->c)">
+                                <input type="text" id="compMapG" placeholder="g: B->
+                            <div class="pair-builder" data-prefix="compG">
+                                <div class="pair-row">
+                                    <input type="text" id="compGPairX" placeholder="x">
+                                    <span class="arrow">→</span>
+                                    <input type="text" id="compGPairY" placeholder="y">
+                                    <button class="icon-btn" onclick="addPair('compG', 'compMapG')" title="Agregar par"><i class="fas fa-plus"></i></button>
+                                    <button class="icon-btn" onclick="clearPairs('compG', 'compMapG')" title="Borrar pares"><i class="fas fa-trash"></i></button>
+                                </div>
+                                <div class="pair-hint">Tip: también puedes escribir “1-&gt;a, 2-&gt;b”. Si repites x, se reemplaza.</div>
+                                <div id="compGPairsList" class="pairs-list"></div>
+                            </div>
+C (ej: a->X,b->Y,c->Z)">
                             </div>
 
                             <button class="run-btn" onclick="composeFunctions()">COMPONER</button>
                             <div class="mini-actions">
                                 <button class="sub-btn" onclick="document.getElementById('compDomain').value='1,2,3';document.getElementById('compMid').value='a,b,c';document.getElementById('compCodomain').value='X,Y,Z';document.getElementById('compMapF').value='1->a,2->b,3->c';document.getElementById('compMapG').value='a->X,b->Y,c->Z';composeFunctions();">EJEMPLO</button>
+                                <button class="sub-btn" onclick="clearSection('compuesta')">LIMPIAR</button>
                             </div>
 
                             <div class="result-display" id="compResult">Esperando entrada...</div>
@@ -350,6 +403,7 @@ end</code></pre>
                         <div class="code-panel">
                             <div class="code-head">
                                 <button class="matlab-toggle" onclick="toggleMatlab('compMatlabWrap', this)">Ver MATLAB</button>
+                                <button class="icon-btn" onclick="downloadCode(\'compMatlab\', \'compuesta.m\')" title="Descargar .m"><i class="fas fa-download"></i></button>
                                 <button class="icon-btn" onclick="copyCode('compMatlab')" title="Copiar">
                                     <i class="fas fa-copy"></i>
                                 </button>
@@ -384,8 +438,21 @@ end</code></pre>
                             <button class="run-btn" onclick="plotDiscrete()">GRAFICAR</button>
                             <div class="mini-actions">
                                 <button class="sub-btn" onclick="document.getElementById('discX').value='0,1,2,3,4';document.getElementById('discY').value='1,2,4,3,5';plotDiscrete();">EJEMPLO</button>
+                                <button class="sub-btn" onclick="clearSection('discreta')">LIMPIAR</button>
                             </div>
 
+                            
+                            <div class="plot-controls">
+                                <label>Tipo:
+                                    <select id="discPlotType">
+                                        <option value="stem">Stem</option>
+                                        <option value="line">Línea</option>
+                                        <option value="scatter">Puntos</option>
+                                    </select>
+                                </label>
+                                <label class="chk"><input type="checkbox" id="discGrid" checked> Grid</label>
+                                <label class="chk"><input type="checkbox" id="discSortX"> Ordenar por x</label>
+                            </div>
                             <canvas id="discCanvas" width="640" height="320" class="plot-canvas"></canvas>
                             <div class="result-display" id="discResult">Esperando datos...</div>
                         </div>
@@ -393,6 +460,7 @@ end</code></pre>
                         <div class="code-panel">
                             <div class="code-head">
                                 <button class="matlab-toggle" onclick="toggleMatlab('discMatlabWrap', this)">Ver MATLAB</button>
+                                <button class="icon-btn" onclick="downloadCode(\'discMatlab\', \'discreta.m\')" title="Descargar .m"><i class="fas fa-download"></i></button>
                                 <button class="icon-btn" onclick="copyCode('discMatlab')" title="Copiar">
                                     <i class="fas fa-copy"></i>
                                 </button>
@@ -435,6 +503,14 @@ end</code></pre>
 
                     <div class="review-form">
                         <input type="text" id="revName" placeholder="Nombre (opcional)">
+                        <div class="review-summary"><div class="avg" id="avgRating">—</div><div class="avg-sub">Promedio</div></div>
+                        <div id="starPicker" class="star-picker" aria-label="Calificación">
+                            <button type="button" class="star" data-v="1">★</button>
+                            <button type="button" class="star" data-v="2">★</button>
+                            <button type="button" class="star" data-v="3">★</button>
+                            <button type="button" class="star" data-v="4">★</button>
+                            <button type="button" class="star" data-v="5">★</button>
+                        </div>
                         <select id="revRating">
                             <option value="5">★★★★★ (5)</option>
                             <option value="4">★★★★☆ (4)</option>
@@ -463,5 +539,7 @@ end</code></pre>
     </a>
 
     <script src="script.js?v=mc1"></script>
+    <div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
+    <div id="plotTip" class="plot-tip" style="display:none;"></div>
 </body>
 </html>
