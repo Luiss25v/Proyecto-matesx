@@ -1,6 +1,8 @@
 // ACTIVAR COLOREADO DE CÓDIGO
-document.addEventListener('DOMContentLoaded', (event) => {
-    hljs.highlightAll();
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.hljs && typeof window.hljs.highlightAll === 'function') {
+        window.hljs.highlightAll();
+    }
 });
 
 // --- DICCIONARIO DE COLORES NEÓN VIBRANTES ---
@@ -20,6 +22,12 @@ const sectionColors = {
 function openTab(evt, tabName) {
     var i, tabcontent, tablinks;
 
+    // Evitar salto al inicio por href="#"
+    if (evt && evt.preventDefault) evt.preventDefault();
+
+    // Color por sección (siempre definido)
+    var newColor = sectionColors[tabName] || '#FFD700';
+
     // Ocultar contenidos
     tabcontent = document.getElementsByClassName("tab-content");
     for (i = 0; i < tabcontent.length; i++) {
@@ -30,22 +38,19 @@ function openTab(evt, tabName) {
     tablinks = document.getElementsByClassName("tab-link");
     for (i = 0; i < tablinks.length; i++) {
         tablinks[i].className = tablinks[i].className.replace(" active", "");
-        tablinks[i].style.borderColor = "transparent"; 
-        tablinks[i].style.color = "#e0e0e0"; 
+        tablinks[i].style.borderColor = "transparent";
+        tablinks[i].style.color = "#e0e0e0";
     }
 
     // Mostrar pestaña actual
     var currentTab = document.getElementById(tabName);
     if (currentTab) {
         currentTab.style.display = "block";
-        
-        // --- CAMBIO DE COLOR DINÁMICO ---
-        var newColor = sectionColors[tabName] || '#FFD700';
         document.documentElement.style.setProperty('--gold-primary', newColor);
     }
 
     // Activar botón
-    if (evt) {
+    if (evt && evt.currentTarget) {
         evt.currentTarget.className += " active";
         evt.currentTarget.style.borderColor = newColor;
         evt.currentTarget.style.color = newColor;
@@ -78,636 +83,575 @@ function calcCartesian() {
     resDiv.innerHTML = `<strong>PARES GENERADOS:</strong><br>{ ${pairs.join(', ')} }`;
 }
 
-/* =========================
-   UTILIDADES (PARSING)
-========================= */
-function parseCSV(raw) {
+// =========================
+//  NUEVAS SECCIONES (MC)
+//  Clasificación / Inversa / Compuesta / Discreta / Video / Reseñas
+// =========================
+
+function parseList(raw) {
     if (!raw) return [];
-    return raw.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    return raw.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean);
 }
 
-/**
- * Acepta pares tipo:
- *  1->a, 2->b
- *  1:a, 2:b
- *  1=a, 2=b
- *  (1,a), (2,b)
- */
 function parseMapping(raw) {
     const out = { map: {}, pairs: [], errors: [] };
-    if (!raw) {
-        out.errors.push("⚠️ Ingresa el mapeo.");
-        return out;
-    }
+    if (!raw) { out.errors.push("⚠️ Ingresa el mapeo."); return out; }
 
-    // Normalizar: quitar llaves y espacios extras
     let cleaned = raw.replace(/[{}]/g, '').trim();
-
-    // Soportar formato (x,y)
     cleaned = cleaned.replace(/\(/g, '').replace(/\)/g, '');
 
-    const parts = cleaned.split(',').map(s => s.trim()).filter(Boolean);
+    const parts = cleaned.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean);
 
-    // Intentar reconstruir pares si el usuario puso (x,y) sin separador claro:
-    // Ej: "1,a,2,b" -> lo convertimos en ["1,a","2,b"]
+    // Si el usuario puso "1,a,2,b" lo emparejamos
     let chunks = parts;
     const hasArrow = cleaned.includes("->") || cleaned.includes(":") || cleaned.includes("=");
     if (!hasArrow && parts.length % 2 === 0) {
         chunks = [];
-        for (let i = 0; i < parts.length; i += 2) {
-            chunks.push(parts[i] + "," + parts[i + 1]);
-        }
+        for (let i = 0; i < parts.length; i += 2) chunks.push(parts[i] + "," + parts[i+1]);
     }
 
-    const separators = ["->", ":", "="];
-    chunks.forEach(p => {
-        let x = null, y = null;
+    const seps = ["->", ":", "="];
+    for (const p of chunks) {
+        let x = "", y = "";
 
-        for (const sep of separators) {
+        let found = false;
+        for (const sep of seps) {
             if (p.includes(sep)) {
-                const [lx, ry] = p.split(sep);
-                x = (lx ?? "").trim();
-                y = (ry ?? "").trim();
+                const tmp = p.split(sep);
+                x = (tmp[0] || "").trim();
+                y = (tmp[1] || "").trim();
+                found = true;
                 break;
             }
         }
-
-        // Formato "x,y"
-        if (x === null || y === null) {
-            if (p.includes(",")) {
-                const [lx, ry] = p.split(",");
-                x = (lx ?? "").trim();
-                y = (ry ?? "").trim();
-            }
+        if (!found && p.includes(",")) {
+            const tmp = p.split(",");
+            x = (tmp[0] || "").trim();
+            y = (tmp[1] || "").trim();
+            found = true;
         }
 
         if (!x || !y) {
             out.errors.push(`⚠️ Par inválido: "${p}"`);
-            return;
+            continue;
         }
 
-        // detectar duplicado con salida distinta
-        if (out.map.hasOwnProperty(x) && out.map[x] !== y) {
+        if (Object.prototype.hasOwnProperty.call(out.map, x) && out.map[x] !== y) {
             out.errors.push(`❌ No es función: "${x}" tiene dos salidas (${out.map[x]} y ${y}).`);
-            return;
+            continue;
         }
 
         out.map[x] = y;
         out.pairs.push([x, y]);
-    });
+    }
 
     if (out.pairs.length === 0 && out.errors.length === 0) out.errors.push("⚠️ No se detectaron pares.");
     return out;
 }
 
-function setResult(el, msg, ok = true) {
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+}
+
+function pairsTable(pairs, h1="x", h2="f(x)") {
+    const rows = pairs.map(([a,b]) => `<tr><td>${escapeHtml(a)}</td><td>${escapeHtml(b)}</td></tr>`).join("");
+    return `<table class="mini-table"><thead><tr><th>${escapeHtml(h1)}</th><th>${escapeHtml(h2)}</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function setMatlab(codeId, wrapId, codeStr, autoOpen=true) {
+    const codeEl = document.getElementById(codeId);
+    const wrap = document.getElementById(wrapId);
+    if (!codeEl || !wrap) return;
+    codeEl.textContent = codeStr || "";
+    if (autoOpen) wrap.style.display = "block";
+
+    // highlight.js (si existe)
+    if (window.hljs && typeof window.hljs.highlightElement === "function") {
+        try { window.hljs.highlightElement(codeEl); } catch {}
+    }
+}
+
+function toggleMatlab(wrapId, btnEl) {
+    const wrap = document.getElementById(wrapId);
+    if (!wrap) return;
+    const isHidden = (wrap.style.display === "none" || wrap.style.display === "");
+    wrap.style.display = isHidden ? "block" : "none";
+    if (btnEl) btnEl.textContent = isHidden ? "Ocultar MATLAB" : "Ver MATLAB";
+}
+
+async function copyCode(codeId) {
+    const el = document.getElementById(codeId);
     if (!el) return;
-    el.style.color = ok ? "var(--gold-primary)" : "red";
-    el.innerHTML = msg;
-}
-
-function stars(n) {
-    const k = Math.max(0, Math.min(5, Number(n) || 0));
-    return "★".repeat(k) + "☆".repeat(5 - k);
-}
-
-/* =========================
-   CLASIFICACIÓN
-========================= */
-function analyzeMapping(domain, codomain, mapping) {
-    // mapping: objeto x->y
-    const report = {
-        isFunction: true,
-        missingDomain: [],
-        image: [],
-        notInCodomain: [],
-        injective: false,
-        surjective: false,
-        bijective: false
-    };
-
-    const image = [];
-    const imageSet = new Set();
-    const seenY = new Set();
-
-    domain.forEach(x => {
-        if (!mapping.hasOwnProperty(x)) report.missingDomain.push(x);
-        else {
-            const y = mapping[x];
-            image.push(y);
-            imageSet.add(y);
-            if (codomain.length > 0 && !codomain.includes(y)) report.notInCodomain.push(`${x}->${y}`);
-            if (seenY.has(y)) { /* repetido */ }
-            seenY.add(y);
+    const txt = el.textContent || "";
+    try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(txt);
+        } else {
+            throw new Error("no clipboard");
         }
-    });
-
-    report.isFunction = report.missingDomain.length === 0; // asumiendo que mapping ya no tiene conflictos
-    report.image = Array.from(imageSet);
-
-    // Injectiva: no repite y (considerando solo x del dominio)
-    report.injective = report.isFunction && (image.length === report.image.length);
-
-    // Sobreyectiva: imagen cubre codominio (si codominio fue dado)
-    if (codomain.length === 0) {
-        report.surjective = false;
-    } else {
-        report.surjective = report.isFunction && codomain.every(y => imageSet.has(y));
+    } catch {
+        const ta = document.createElement("textarea");
+        ta.value = txt;
+        ta.style.position = "fixed";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
     }
-
-    report.bijective = report.injective && report.surjective;
-
-    return report;
 }
 
+function badge(text, type="ok") {
+    const cls = type === "ok" ? "badge-ok" : (type === "warn" ? "badge-warn" : "badge-bad");
+    return `<span class="pill ${cls}">${escapeHtml(text)}</span>`;
+}
+
+// --------- CLASIFICACIÓN ----------
 function classifyFunction() {
-    const dom = parseCSV(document.getElementById("classDomain")?.value);
-    const cod = parseCSV(document.getElementById("classCodomain")?.value);
-    const mappingRaw = document.getElementById("classMap")?.value;
+    const domain = parseList(document.getElementById("classDomain")?.value);
+    const codomain = parseList(document.getElementById("classCodomain")?.value);
+    const mapping = parseMapping(document.getElementById("classMap")?.value);
+    const out = document.getElementById("classResult");
 
-    const resEl = document.getElementById("classResult");
-    const codeEl = document.getElementById("classMatlab");
+    if (!out) return;
 
-    if (dom.length === 0 || cod.length === 0 || !mappingRaw) {
-        setResult(resEl, "⚠️ Completa dominio, codominio y mapeo.", false);
+    const errors = [];
+    if (domain.length === 0) errors.push("⚠️ Dominio A vacío.");
+    if (codomain.length === 0) errors.push("⚠️ Codominio B vacío.");
+    errors.push(...mapping.errors);
+
+    if (errors.length) {
+        out.innerHTML = `<div class="alert-bad">${errors.map(e => `<div>${escapeHtml(e)}</div>`).join("")}</div>`;
+        setMatlab("classMatlab", "classMatlabWrap", "% Corrige los datos primero para generar el script MATLAB.", false);
         return;
     }
 
-    const parsed = parseMapping(mappingRaw);
-    if (parsed.errors.length > 0) {
-        setResult(resEl, parsed.errors.join("<br>"), false);
+    // Validar que todo x del dominio tenga imagen
+    const missingX = domain.filter(x => !Object.prototype.hasOwnProperty.call(mapping.map, x));
+    const extraX = Object.keys(mapping.map).filter(x => !domain.includes(x));
+
+    let isFunction = missingX.length === 0 && mapping.errors.length === 0;
+
+    // Validar que imágenes estén en codominio
+    const badY = Object.values(mapping.map).filter(y => !codomain.includes(y));
+    if (badY.length) {
+        isFunction = false;
+        errors.push(`❌ Hay salidas fuera del codominio: ${[...new Set(badY)].join(", ")}`);
+    }
+
+    if (!isFunction) {
+        const html = [
+            badge("NO es función", "bad"),
+            missingX.length ? `<div class="alert-warn">Faltan mapeos para: ${escapeHtml(missingX.join(", "))}</div>` : "",
+            extraX.length ? `<div class="alert-warn">Sobran entradas (no están en A): ${escapeHtml(extraX.join(", "))}</div>` : "",
+            errors.length ? `<div class="alert-bad">${errors.map(e => `<div>${escapeHtml(e)}</div>`).join("")}</div>` : "",
+            pairsTable(mapping.pairs, "x", "imagen")
+        ].join("");
+        out.innerHTML = html;
+
+        setMatlab("classMatlab","classMatlabWrap",
+`% CLASIFICACIÓN (revisa datos: no es función con el dominio/codominio actual)
+A = {${domain.map(x=>`'${x}'`).join(", ")}};
+B = {${codomain.map(x=>`'${x}'`).join(", ")}};
+% Mapeo (x -> y)
+pairs = {${mapping.pairs.map(([x,y])=>`'${x}','${y}'`).join(", ")}};
+% Sugerencia: valida que cada x en A tenga exactamente una salida en B.`, true);
         return;
     }
 
-    const rep = analyzeMapping(dom, cod, parsed.map);
+    // Injectiva: todas las imágenes únicas
+    const images = domain.map(x => mapping.map[x]);
+    const uniqueImages = new Set(images);
+    const injective = uniqueImages.size === images.length;
 
-    if (rep.notInCodomain.length > 0) {
-        setResult(resEl, `⚠️ Hay salidas fuera del codominio: ${rep.notInCodomain.join(", ")}`, false);
-        return;
-    }
+    // Sobreyectiva: todas las y del codominio aparecen
+    const imageSet = new Set(images);
+    const surjective = codomain.every(y => imageSet.has(y));
 
-    if (!rep.isFunction) {
-        setResult(resEl, `❌ No es función: faltan asignaciones para ${rep.missingDomain.join(", ")}`, false);
-        return;
-    }
+    const bijective = injective && surjective;
 
-    const lines = [];
-    lines.push(`✅ ES FUNCIÓN (cada x tiene una única salida)`);
-    lines.push(`Imagen: { ${rep.image.join(", ")} }`);
-    lines.push(rep.injective ? `✅ Injectiva` : `❌ No injectiva (se repite alguna salida)`);
-    lines.push(rep.surjective ? `✅ Sobreyectiva` : `❌ No sobreyectiva (no cubre todo B)`);
-    lines.push(rep.bijective ? `🏆 Biyectiva (tiene inversa)` : `—`);
+    const html = [
+        badge("Es función", "ok"),
+        injective ? badge("Inyectiva", "ok") : badge("No inyectiva", "warn"),
+        surjective ? badge("Sobreyectiva", "ok") : badge("No sobreyectiva", "warn"),
+        bijective ? badge("Biyectiva", "ok") : badge("No biyectiva", "warn"),
+        `<div style="margin-top:12px">${pairsTable(domain.map(x=>[x, mapping.map[x]]), "x", "f(x)")}</div>`
+    ].join(" ");
+    out.innerHTML = html;
 
-    setResult(resEl, lines.join("<br>"), true);
+    // MATLAB script
+    const matlab =
+`% CLASIFICACIÓN DE UNA FUNCIÓN (discreta)
+A = {${domain.map(x=>`'${x}'`).join(", ")}};
+B = {${codomain.map(x=>`'${x}'`).join(", ")}};
 
-    // MATLAB generator
-    const A = dom.map(x => `'${x}'`).join(", ");
-    const B = cod.map(y => `'${y}'`).join(", ");
-    const fPairs = parsed.pairs.map(([x, y]) => `'%s','%s'`).join("; "); // not used
-    const keys = parsed.pairs.map(([x,_]) => `'${x}'`).join(", ");
-    const vals = parsed.pairs.map(([_,y]) => `'${y}'`).join(", ");
+% Pares (x -> y)
+X = {${domain.map(x=>`'${x}'`).join(", ")}};
+Y = {${domain.map(x=>`'${mapping.map[x]}'`).join(", ")}};
 
-    const matlab = [
-`% Dominio y Codominio`,
-`A = {${A}};`,
-`B = {${B}};`,
-`% Mapeo f (x -> y) como tabla`,
-`X = {${keys}};`,
-`Y = {${vals}};`,
-`T = table(X(:), Y(:), 'VariableNames', {'x','fx'});`,
-`disp(T);`,
-``,
-`% Verificar que sea función sobre A (cada x aparece una vez)`,
-`isFunction = (height(unique(T(:,1))) == numel(A)) && all(ismember(A, T.x));`,
-``,
-`% Imagen`,
-`Im = unique(T.fx);`,
-``,
-`% Injectiva: no repite salida`,
-`injectiva = isFunction && (numel(Im) == height(T));`,
-``,
-`% Sobreyectiva: cubre B`,
-`sobreyectiva = isFunction && all(ismember(B, Im));`,
-``,
-`biyectiva = injectiva && sobreyectiva;`,
-`fprintf('Funcion=%d | Injectiva=%d | Sobreyectiva=%d | Biyectiva=%d\\n', isFunction, injectiva, sobreyectiva, biyectiva);`
-    ].join("\n");
+% Inyectiva: todas las imágenes distintas
+isInjective = numel(unique(Y)) == numel(Y);
 
-    if (codeEl) {
-        codeEl.textContent = matlab;
-        if (window.hljs) hljs.highlightElement(codeEl);
-    }
+% Sobreyectiva: cubre todo el codominio
+isSurjective = all(ismember(B, Y));
+
+% Biyectiva
+isBijective = isInjective && isSurjective;
+
+disp(isInjective); disp(isSurjective); disp(isBijective);`;
+    setMatlab("classMatlab","classMatlabWrap", matlab, true);
 }
 
-/* =========================
-   INVERSA
-========================= */
+// --------- INVERSA ----------
 function invertFunction() {
-    const dom = parseCSV(document.getElementById("invDomain")?.value);
-    const cod = parseCSV(document.getElementById("invCodomain")?.value);
-    const mappingRaw = document.getElementById("invMap")?.value;
+    const domain = parseList(document.getElementById("invDomain")?.value);
+    const codomain = parseList(document.getElementById("invCodomain")?.value);
+    const mapping = parseMapping(document.getElementById("invMap")?.value);
     const query = (document.getElementById("invQuery")?.value || "").trim();
+    const out = document.getElementById("invResult");
+    if (!out) return;
 
-    const resEl = document.getElementById("invResult");
-    const codeEl = document.getElementById("invMatlab");
+    const errors = [];
+    if (domain.length === 0) errors.push("⚠️ Dominio A vacío.");
+    if (codomain.length === 0) errors.push("⚠️ Codominio B vacío.");
+    errors.push(...mapping.errors);
 
-    if (dom.length === 0 || cod.length === 0 || !mappingRaw) {
-        setResult(resEl, "⚠️ Completa dominio, codominio y mapeo.", false);
+    if (errors.length) {
+        out.innerHTML = `<div class="alert-bad">${errors.map(e => `<div>${escapeHtml(e)}</div>`).join("")}</div>`;
+        setMatlab("invMatlab","invMatlabWrap","% Corrige los datos para generar el script MATLAB.", false);
         return;
     }
 
-    const parsed = parseMapping(mappingRaw);
-    if (parsed.errors.length > 0) {
-        setResult(resEl, parsed.errors.join("<br>"), false);
+    // Validar que todo x del dominio tenga imagen y en B
+    const missingX = domain.filter(x => !Object.prototype.hasOwnProperty.call(mapping.map, x));
+    const images = domain.filter(x=>Object.prototype.hasOwnProperty.call(mapping.map,x)).map(x => mapping.map[x]);
+    const badY = images.filter(y => !codomain.includes(y));
+
+    if (missingX.length || badY.length) {
+        out.innerHTML = badge("NO es biyectiva → no hay inversa", "bad") +
+            (missingX.length ? `<div class="alert-warn">Faltan mapeos para: ${escapeHtml(missingX.join(", "))}</div>` : "") +
+            (badY.length ? `<div class="alert-bad">Hay salidas fuera de B: ${escapeHtml([...new Set(badY)].join(", "))}</div>` : "");
+        setMatlab("invMatlab","invMatlabWrap","% No hay inversa: revisa dominio/codominio y el mapeo.", true);
         return;
     }
 
-    const rep = analyzeMapping(dom, cod, parsed.map);
+    const injective = (new Set(images)).size === images.length;
+    const surjective = codomain.every(y => new Set(images).has(y));
+    const bijective = injective && surjective;
 
-    if (rep.notInCodomain.length > 0) {
-        setResult(resEl, `⚠️ Hay salidas fuera del codominio: ${rep.notInCodomain.join(", ")}`, false);
+    if (!bijective) {
+        out.innerHTML = badge("Es función, pero NO biyectiva → no hay inversa", "warn");
+        setMatlab("invMatlab","invMatlabWrap","% No hay inversa: se requiere biyectividad.", true);
         return;
     }
 
-    if (!rep.bijective) {
-        const why = [];
-        if (!rep.isFunction) why.push(`faltan asignaciones en el dominio (${rep.missingDomain.join(", ")})`);
-        if (rep.isFunction && !rep.injective) why.push("no es injectiva (se repite alguna salida)");
-        if (rep.isFunction && !rep.surjective) why.push("no es sobreyectiva (no cubre todo B)");
-        setResult(resEl, `❌ No tiene inversa porque ${why.join(" y ")}.`, false);
-        return;
-    }
-
-    // construir inversa
     const inv = {};
-    Object.keys(parsed.map).forEach(x => {
-        inv[parsed.map[x]] = x;
-    });
+    domain.forEach(x => { inv[mapping.map[x]] = x; });
+    const invPairs = Object.keys(inv).map(y => [y, inv[y]]);
 
-    const invPairs = Object.keys(inv).map(y => `${y}->${inv[y]}`);
-    const lines = [];
-    lines.push(`✅ Inversa encontrada:`);
-    lines.push(`f⁻¹ = { ${invPairs.join(", ")} }`);
-
+    let queryHtml = "";
     if (query) {
-        if (inv.hasOwnProperty(query)) lines.push(`<br><strong>f⁻¹(${query}) = ${inv[query]}</strong>`);
-        else lines.push(`<br>⚠️ "${query}" no está en el codominio B.`);
+        queryHtml = Object.prototype.hasOwnProperty.call(inv, query)
+            ? `<div class="alert-ok">f⁻¹(${escapeHtml(query)}) = <b>${escapeHtml(inv[query])}</b></div>`
+            : `<div class="alert-warn">No existe f⁻¹(${escapeHtml(query)}) con el mapeo actual.</div>`;
     }
 
-    setResult(resEl, lines.join("<br>"), true);
+    out.innerHTML = [
+        badge("Biyectiva → inversa existe", "ok"),
+        queryHtml,
+        `<div style="margin-top:12px">${pairsTable(invPairs, "y", "f⁻¹(y)")}</div>`
+    ].join("");
 
-    // MATLAB generator
-    const A = dom.map(x => `'${x}'`).join(", ");
-    const B = cod.map(y => `'${y}'`).join(", ");
-    const keys = parsed.pairs.map(([x,_]) => `'${x}'`).join(", ");
-    const vals = parsed.pairs.map(([_,y]) => `'${y}'`).join(", ");
+    const matlab =
+`% INVERSA DE UNA FUNCIÓN BIYECTIVA (discreta)
+A = {${domain.map(x=>`'${x}'`).join(", ")}};
+B = {${codomain.map(x=>`'${x}'`).join(", ")}};
 
-    const matlab = [
-`% Dominio y Codominio`,
-`A = {${A}};`,
-`B = {${B}};`,
-`X = {${keys}};`,
-`Y = {${vals}};`,
-`T = table(X(:), Y(:), 'VariableNames', {'x','fx'});`,
-``,
-`% Biyectiva => inversa`,
-`isFunction = (height(unique(T(:,1))) == numel(A)) && all(ismember(A, T.x));`,
-`Im = unique(T.fx);`,
-`injectiva = isFunction && (numel(Im) == height(T));`,
-`sobreyectiva = isFunction && all(ismember(B, Im));`,
-`biyectiva = injectiva && sobreyectiva;`,
-``,
-`if ~biyectiva`,
-`    error('No hay inversa: la funcion no es biyectiva');`,
-`end`,
-``,
-`% Inversa como tabla (y -> x)`,
-`Tinv = table(T.fx, T.x, 'VariableNames', {'y','finv_y'});`,
-`disp(Tinv);`,
-``,
-`% Consulta ejemplo`,
-`yq = '${query || (cod[0] || "")}';`,
-`idx = strcmp(Tinv.y, yq);`,
-`if any(idx)`,
-`    fprintf('f^{-1}(%s) = %s\\n', yq, Tinv.finv_y{idx});`,
-`else`,
-`    fprintf('y=%s no encontrado\\n', yq);`,
-`end`
-    ].join("\n");
+X = {${domain.map(x=>`'${x}'`).join(", ")}};
+Y = {${domain.map(x=>`'${mapping.map[x]}'`).join(", ")}};
 
-    if (codeEl) {
-        codeEl.textContent = matlab;
-        if (window.hljs) hljs.highlightElement(codeEl);
-    }
+% Verificar biyectividad
+isInjective = numel(unique(Y)) == numel(Y);
+isSurjective = all(ismember(B, Y));
+if ~(isInjective && isSurjective)
+    error('No es biyectiva, no existe inversa.');
+end
+
+% Construir inversa (y -> x)
+invMap = containers.Map(Y, X);
+
+% Consultar ejemplo
+yq = '${query || (codomain[0] || "")}';
+if isKey(invMap, yq)
+    disp(invMap(yq));
+else
+    disp('No existe f^{-1}(y) para ese valor.');
+end`;
+    setMatlab("invMatlab","invMatlabWrap", matlab, true);
 }
 
-/* =========================
-   COMPOSICIÓN
-========================= */
+// --------- COMPUESTA ----------
 function composeFunctions() {
-    const A = parseCSV(document.getElementById("compDomain")?.value);
-    const B = parseCSV(document.getElementById("compMid")?.value);
-    const C = parseCSV(document.getElementById("compCodomain")?.value);
-    const rawF = document.getElementById("compMapF")?.value;
-    const rawG = document.getElementById("compMapG")?.value;
+    const A = parseList(document.getElementById("compDomain")?.value);
+    const B = parseList(document.getElementById("compMid")?.value);
+    const C = parseList(document.getElementById("compCodomain")?.value);
+    const f = parseMapping(document.getElementById("compMapF")?.value);
+    const g = parseMapping(document.getElementById("compMapG")?.value);
+    const out = document.getElementById("compResult");
+    if (!out) return;
 
-    const resEl = document.getElementById("compResult");
-    const codeEl = document.getElementById("compMatlab");
+    const errors = [];
+    if (A.length === 0) errors.push("⚠️ A vacío.");
+    if (B.length === 0) errors.push("⚠️ B vacío.");
+    if (C.length === 0) errors.push("⚠️ C vacío.");
+    errors.push(...f.errors.map(e=>"f: "+e), ...g.errors.map(e=>"g: "+e));
 
-    if (A.length === 0 || B.length === 0 || C.length === 0 || !rawF || !rawG) {
-        setResult(resEl, "⚠️ Completa A, B, C, f y g.", false);
+    if (errors.length) {
+        out.innerHTML = `<div class="alert-bad">${errors.map(e => `<div>${escapeHtml(e)}</div>`).join("")}</div>`;
+        setMatlab("compMatlab","compMatlabWrap","% Corrige los datos para generar el script MATLAB.", false);
         return;
     }
 
-    const fParsed = parseMapping(rawF);
-    const gParsed = parseMapping(rawG);
+    // Validar f: A->B y g: B->C
+    const missingF = A.filter(x => !Object.prototype.hasOwnProperty.call(f.map, x));
+    const fOut = A.filter(x=>Object.prototype.hasOwnProperty.call(f.map,x)).map(x=>f.map[x]);
+    const badF = fOut.filter(y => !B.includes(y));
 
-    if (fParsed.errors.length > 0) { setResult(resEl, fParsed.errors.join("<br>"), false); return; }
-    if (gParsed.errors.length > 0) { setResult(resEl, gParsed.errors.join("<br>"), false); return; }
+    const gKeys = Object.keys(g.map);
+    const badGIn = gKeys.filter(y => !B.includes(y));
+    const gOut = gKeys.map(y=>g.map[y]);
+    const badGOut = gOut.filter(z => !C.includes(z));
 
-    const fRep = analyzeMapping(A, B, fParsed.map);
-    const gRep = analyzeMapping(B, C, gParsed.map);
-
-    if (!fRep.isFunction) { setResult(resEl, `❌ f no es función: faltan ${fRep.missingDomain.join(", ")}`, false); return; }
-    if (!gRep.isFunction) { setResult(resEl, `❌ g no es función: faltan ${gRep.missingDomain.join(", ")}`, false); return; }
-
-    // composición
-    const comp = {};
-    const missingInG = [];
-    A.forEach(x => {
-        const y = fParsed.map[x];
-        if (!gParsed.map.hasOwnProperty(y)) missingInG.push(`${x}: g(${y}) no definido`);
-        else comp[x] = gParsed.map[y];
-    });
-
-    const pairs = Object.keys(comp).map(x => `${x}->${comp[x]}`);
-
-    const lines = [];
-    lines.push(`✅ (g ∘ f)(x) calculada`);
-    lines.push(`(g ∘ f) = { ${pairs.join(", ")} }`);
-    if (missingInG.length > 0) lines.push(`<br>⚠️ Faltó g(y) para: ${missingInG.join(" | ")}`);
-
-    setResult(resEl, lines.join("<br>"), true);
-
-    // MATLAB generator
-    const matA = A.map(v => `'${v}'`).join(", ");
-    const matB = B.map(v => `'${v}'`).join(", ");
-    const matC = C.map(v => `'${v}'`).join(", ");
-    const fX = fParsed.pairs.map(([x,_]) => `'${x}'`).join(", ");
-    const fY = fParsed.pairs.map(([_,y]) => `'${y}'`).join(", ");
-    const gX = gParsed.pairs.map(([x,_]) => `'${x}'`).join(", ");
-    const gY = gParsed.pairs.map(([_,y]) => `'${y}'`).join(", ");
-
-    const matlab = [
-`% Conjuntos`,
-`A = {${matA}}; B = {${matB}}; C = {${matC}};`,
-``,
-`% f: A->B`,
-`Tf = table({${fX}}', {${fY}}', 'VariableNames', {'x','fx'});`,
-`% g: B->C`,
-`Tg = table({${gX}}', {${gY}}', 'VariableNames', {'y','gy'});`,
-``,
-`% Composición (g o f)`,
-`Tcomp = table('Size',[0 2],'VariableTypes',{'string','string'},'VariableNames',{'x','gofx'});`,
-`for i = 1:height(Tf)`,
-`    x = string(Tf.x{i});`,
-`    y = string(Tf.fx{i});`,
-`    j = find(strcmp(Tg.y, y), 1);`,
-`    if ~isempty(j)`,
-`        Tcomp = [Tcomp; {x, string(Tg.gy{j})}]; %#ok<AGROW>`,
-`    end`,
-`end`,
-`disp(Tcomp);`
-    ].join("\n");
-
-    if (codeEl) {
-        codeEl.textContent = matlab;
-        if (window.hljs) hljs.highlightElement(codeEl);
+    if (missingF.length || badF.length || badGIn.length || badGOut.length) {
+        out.innerHTML =
+            badge("No se puede componer (datos inconsistentes)", "bad") +
+            (missingF.length ? `<div class="alert-warn">f no está definida para: ${escapeHtml(missingF.join(", "))}</div>` : "") +
+            (badF.length ? `<div class="alert-bad">f(x) fuera de B: ${escapeHtml([...new Set(badF)].join(", "))}</div>` : "") +
+            (badGIn.length ? `<div class="alert-warn">g tiene entradas fuera de B: ${escapeHtml([...new Set(badGIn)].join(", "))}</div>` : "") +
+            (badGOut.length ? `<div class="alert-bad">g(y) fuera de C: ${escapeHtml([...new Set(badGOut)].join(", "))}</div>` : "");
+        setMatlab("compMatlab","compMatlabWrap","% Revisa que f: A->B y g: B->C.", true);
+        return;
     }
+
+    const compPairs = [];
+    const stepsRows = [];
+    for (const x of A) {
+        const y = f.map[x];
+        const z = g.map[y];
+        compPairs.push([x, z]);
+        stepsRows.push([x, y, z]);
+    }
+
+    const stepsTable = `<table class="mini-table"><thead><tr><th>x</th><th>f(x)</th><th>g(f(x))</th></tr></thead><tbody>${
+        stepsRows.map(r=>`<tr><td>${escapeHtml(r[0])}</td><td>${escapeHtml(r[1])}</td><td>${escapeHtml(r[2])}</td></tr>`).join("")
+    }</tbody></table>`;
+
+    out.innerHTML = badge("Compuesta g∘f calculada", "ok") +
+        `<div style="margin-top:12px">${stepsTable}</div>` +
+        `<div style="margin-top:12px">${pairsTable(compPairs,"x","(g∘f)(x)")}</div>`;
+
+    const matlab =
+`% FUNCIÓN COMPUESTA h = g ∘ f
+A = {${A.map(x=>`'${x}'`).join(", ")}};
+B = {${B.map(x=>`'${x}'`).join(", ")}};
+C = {${C.map(x=>`'${x}'`).join(", ")}};
+
+% f: A->B
+Xf = {${A.map(x=>`'${x}'`).join(", ")}};
+Yf = {${A.map(x=>`'${f.map[x]}'`).join(", ")}};
+
+% g: B->C  (definida en los valores que usa f)
+Xg = {${B.map(x=>`'${x}'`).join(", ")}};
+% Ajusta Yg según tu mapeo
+% Ejemplo (rellena según tu entrada):
+% Yg = {...};
+
+% Para usar en MATLAB con maps:
+fMap = containers.Map(Xf, Yf);
+
+% gMap (ejemplo): define gMap con tus pares
+% gMap = containers.Map(Xg, Yg);
+
+% Calcular h(x) = g(f(x))
+% h = cell(size(A));
+% for i=1:numel(A)
+%   y = fMap(A{i});
+%   h{i} = gMap(y);
+% end`;
+    setMatlab("compMatlab","compMatlabWrap", matlab, true);
 }
 
-/* =========================
-   FUNCIÓN DISCRETA (PLOT)
-========================= */
+// --------- DISCRETA ----------
 function plotDiscrete() {
-    const xRaw = document.getElementById("discX")?.value;
-    const yRaw = document.getElementById("discY")?.value;
-    const resEl = document.getElementById("discResult");
-    const codeEl = document.getElementById("discMatlab");
+    const xs = parseList(document.getElementById("discX")?.value).map(Number);
+    const ys = parseList(document.getElementById("discY")?.value).map(Number);
+    const out = document.getElementById("discResult");
     const canvas = document.getElementById("discCanvas");
 
-    const xs = parseCSV(xRaw).map(Number);
-    const ys = parseCSV(yRaw).map(Number);
+    if (!out) return;
 
     if (xs.length === 0 || ys.length === 0) {
-        setResult(resEl, "⚠️ Ingresa x y f(x).", false);
+        out.innerHTML = `<div class="alert-warn">⚠️ Ingresa listas X e Y.</div>`;
         return;
     }
-    if (xs.some(n => Number.isNaN(n)) || ys.some(n => Number.isNaN(n))) {
-        setResult(resEl, "❌ Usa solo números (ej: 0,1,2).", false);
-        return;
-    }
-    if (xs.length !== ys.length) {
-        setResult(resEl, "❌ x y f(x) deben tener la misma cantidad de valores.", false);
+    if (xs.length !== ys.length || xs.some(Number.isNaN) || ys.some(Number.isNaN)) {
+        out.innerHTML = `<div class="alert-bad">❌ X e Y deben tener la misma cantidad de números (y ser numéricos).</div>`;
         return;
     }
 
-    // tabla
-    let tableHtml = `<strong>Tabla:</strong><br>`;
-    tableHtml += xs.map((x, i) => `x=${x} → f(x)=${ys[i]}`).join("<br>");
-    setResult(resEl, tableHtml, true);
+    const pairs = xs.map((x,i)=>[String(x), String(ys[i])]);
+    out.innerHTML = badge("Datos cargados", "ok") + `<div style="margin-top:12px">${pairsTable(pairs,"x","f(x)")}</div>`;
 
-    // dibujar
     if (canvas && canvas.getContext) {
         drawDiscretePlot(canvas, xs, ys);
     }
 
-    // MATLAB
-    const matlab = [
-`x = [${xs.join(" ")}];`,
-`y = [${ys.join(" ")}];`,
-`stem(x, y, 'filled');`,
-`grid on;`,
-`xlabel('x'); ylabel('f(x)');`,
-`title('Función discreta');`
-    ].join("\n");
+    const matlab =
+`% FUNCIÓN DISCRETA (gráfica tipo stem)
+x = [${xs.join(" ")}];
+y = [${ys.join(" ")}];
 
-    if (codeEl) {
-        codeEl.textContent = matlab;
-        if (window.hljs) hljs.highlightElement(codeEl);
-    }
+stem(x, y, 'filled');
+grid on;
+xlabel('x'); ylabel('f(x)');
+title('Función discreta');`;
+    setMatlab("discMatlab","discMatlabWrap", matlab, true);
 }
 
 function drawDiscretePlot(canvas, xs, ys) {
     const ctx = canvas.getContext("2d");
     const w = canvas.width, h = canvas.height;
-
     ctx.clearRect(0,0,w,h);
 
-    // Margen
-    const m = 45;
-    const plotW = w - 2*m;
-    const plotH = h - 2*m;
+    // margins
+    const mx = 40, my = 30;
 
+    // ranges
     const minX = Math.min(...xs), maxX = Math.max(...xs);
-    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    const minY = Math.min(0, ...ys), maxY = Math.max(...ys);
 
-    // evitar división por cero
-    const dx = (maxX - minX) || 1;
-    const dy = (maxY - minY) || 1;
+    const xScale = (w - 2*mx) / (maxX - minX || 1);
+    const yScale = (h - 2*my) / (maxY - minY || 1);
 
-    const xToPx = x => m + ((x - minX) / dx) * plotW;
-    const yToPx = y => (h - m) - ((y - minY) / dy) * plotH;
+    const xToPx = x => mx + (x - minX) * xScale;
+    const yToPx = y => h - my - (y - minY) * yScale;
 
-    // fondo grid
-    ctx.globalAlpha = 0.8;
-    ctx.strokeStyle = "rgba(255,255,255,0.08)";
+    // axes
+    ctx.strokeStyle = "rgba(255,255,255,0.6)";
     ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(mx, my);
+    ctx.lineTo(mx, h-my);
+    ctx.lineTo(w-mx, h-my);
+    ctx.stroke();
 
-    const gridN = 10;
-    for (let i=0;i<=gridN;i++){
-        const gx = m + (i/gridN)*plotW;
-        const gy = m + (i/gridN)*plotH;
-        ctx.beginPath(); ctx.moveTo(gx, m); ctx.lineTo(gx, h-m); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(m, gy); ctx.lineTo(w-m, gy); ctx.stroke();
-    }
-
-    // ejes
-    ctx.globalAlpha = 1;
-    ctx.strokeStyle = "rgba(255,255,255,0.35)";
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(m, h-m); ctx.lineTo(w-m, h-m); ctx.stroke(); // x
-    ctx.beginPath(); ctx.moveTo(m, m); ctx.lineTo(m, h-m); ctx.stroke(); // y
-
-    // puntos y stems
-    ctx.strokeStyle = "rgba(255,255,255,0.55)";
-    ctx.lineWidth = 2;
-
-    for (let i=0;i<xs.length;i++){
-        const px = xToPx(xs[i]);
+    // stems
+    ctx.strokeStyle = "rgba(255, 215, 0, 0.9)";
+    ctx.fillStyle = "rgba(255, 215, 0, 0.9)";
+    xs.forEach((x,i)=>{
+        const px = xToPx(x);
         const py = yToPx(ys[i]);
-        const baseY = h - m;
-
-        // stem
+        const p0 = yToPx(0);
         ctx.beginPath();
-        ctx.moveTo(px, baseY);
+        ctx.moveTo(px, p0);
         ctx.lineTo(px, py);
         ctx.stroke();
-
-        // punto
-        ctx.fillStyle = "rgba(255,255,255,0.9)";
         ctx.beginPath();
-        ctx.arc(px, py, 5, 0, Math.PI*2);
+        ctx.arc(px, py, 4, 0, Math.PI*2);
         ctx.fill();
-    }
-
-    // etiquetas min/max
-    ctx.fillStyle = "rgba(255,255,255,0.65)";
-    ctx.font = "14px monospace";
-    ctx.fillText(`x: ${minX} … ${maxX}`, m, 20);
-    ctx.fillText(`y: ${minY} … ${maxY}`, m, 38);
+    });
 }
 
-/* =========================
-   RESEÑAS (LOCALSTORAGE)
-========================= */
-const REV_KEY = "mathbot_reviews_v1";
+// --------- RESEÑAS ----------
+const REV_KEY = "mc_reviews_v1";
 
 function loadReviews() {
     try {
         const raw = localStorage.getItem(REV_KEY);
         if (!raw) return [];
         const arr = JSON.parse(raw);
-        if (!Array.isArray(arr)) return [];
-        return arr;
-    } catch {
-        return [];
-    }
+        return Array.isArray(arr) ? arr : [];
+    } catch { return []; }
 }
 
 function saveReviews(arr) {
-    localStorage.setItem(REV_KEY, JSON.stringify(arr));
+    try { localStorage.setItem(REV_KEY, JSON.stringify(arr)); } catch {}
+}
+
+function stars(n) {
+    const k = Math.max(0, Math.min(5, Number(n)||0));
+    return "★".repeat(k) + "☆".repeat(5-k);
 }
 
 function renderReviews() {
-    const listEl = document.getElementById("reviewsList");
-    if (!listEl) return;
-
-    const reviews = loadReviews();
-
-    if (reviews.length === 0) {
-        listEl.innerHTML = `<div class="review-card"><div class="review-text">Aún no hay reseñas. Sé el primero.</div></div>`;
+    const list = document.getElementById("reviewsList");
+    if (!list) return;
+    const arr = loadReviews();
+    if (arr.length === 0) {
+        list.innerHTML = `<div class="review-card"><div class="review-text">Aún no hay reseñas.</div></div>`;
         return;
     }
-
-    listEl.innerHTML = reviews
-        .slice()
-        .reverse()
-        .map(r => {
-            const safeName = (r.name || "Anónimo").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-            const safeText = (r.text || "").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-            const safeDate = (r.date || "");
-            const rating = Number(r.rating) || 0;
-
-            return `
-            <div class="review-card">
-                <div class="review-top">
-                    <div>
-                        <div class="review-name">${safeName}</div>
-                        <div class="review-date">${safeDate}</div>
-                    </div>
-                    <div class="review-stars">${stars(rating)}</div>
+    list.innerHTML = arr.slice().reverse().map(r => {
+        const name = escapeHtml(r.name || "Anónimo");
+        const text = escapeHtml(r.text || "");
+        const date = escapeHtml(r.date || "");
+        const rating = Number(r.rating)||0;
+        return `<div class="review-card">
+            <div class="review-top">
+                <div>
+                    <div class="review-name">${name}</div>
+                    <div class="review-date">${date}</div>
                 </div>
-                <div class="review-text">${safeText}</div>
-            </div>`;
-        })
-        .join("");
+                <div class="review-stars">${stars(rating)}</div>
+            </div>
+            <div class="review-text">${text}</div>
+        </div>`;
+    }).join("");
 }
 
 function addReview() {
-    const name = (document.getElementById("revName")?.value || "").trim();
-    const rating = Number(document.getElementById("revRating")?.value || "");
-    const text = (document.getElementById("revText")?.value || "").trim();
-    const msgEl = document.getElementById("revMsg");
+    const nameEl = document.getElementById("revName");
+    const ratingEl = document.getElementById("revRating");
+    const textEl = document.getElementById("revText");
+    const msg = document.getElementById("revMsg");
+
+    const name = (nameEl?.value || "").trim();
+    const rating = Number(ratingEl?.value || 5);
+    const text = (textEl?.value || "").trim();
 
     if (!text) {
-        setResult(msgEl, "⚠️ Escribe un comentario.", false);
-        return;
-    }
-    if (!(rating >= 1 && rating <= 5)) {
-        setResult(msgEl, "⚠️ La calificación debe ser de 1 a 5.", false);
+        if (msg) msg.textContent = "Escribe una reseña.";
         return;
     }
 
-    const now = new Date();
-    const date = now.toLocaleString();
-
-    const reviews = loadReviews();
-    reviews.push({ name: name || "Anónimo", rating, text, date });
-    saveReviews(reviews);
-
-    // limpiar
-    const nEl = document.getElementById("revName"); if (nEl) nEl.value = "";
-    const rEl = document.getElementById("revRating"); if (rEl) rEl.value = "";
-    const tEl = document.getElementById("revText"); if (tEl) tEl.value = "";
-
-    setResult(msgEl, "✅ Reseña guardada en este navegador.", true);
+    const arr = loadReviews();
+    arr.push({
+        name: name || "Anónimo",
+        rating: Math.max(1, Math.min(5, rating)),
+        text,
+        date: new Date().toLocaleString()
+    });
+    saveReviews(arr);
+    if (textEl) textEl.value = "";
+    if (msg) msg.textContent = "Reseña guardada ✅";
     renderReviews();
 }
 
 function clearReviews() {
-    localStorage.removeItem(REV_KEY);
+    try { localStorage.removeItem(REV_KEY); } catch {}
+    const msg = document.getElementById("revMsg");
+    if (msg) msg.textContent = "Reseñas eliminadas.";
     renderReviews();
-    const msgEl = document.getElementById("revMsg");
-    setResult(msgEl, "✅ Reseñas borradas.", true);
 }
 
-// Inicialización
+// Inicialización segura
 document.addEventListener("DOMContentLoaded", () => {
-    renderReviews();
-    const canvas = document.getElementById("discCanvas");
-    if (canvas && canvas.getContext) {
-        // plot vacío de referencia
-        drawDiscretePlot(canvas, [0,1], [0,1]);
-    }
+    try { renderReviews(); } catch {}
 });
+
+window.__MC_APP_LOADED__ = true;
