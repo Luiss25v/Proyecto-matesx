@@ -33,6 +33,10 @@ function openTab(evt, tabName) {
     for (i = 0; i < tabcontent.length; i++) {
         tabcontent[i].style.display = "none";
     }
+    // Animación: reset clase active
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].classList && tabcontent[i].classList.remove("active");
+    }
 
     // Resetear botones
     tablinks = document.getElementsByClassName("tab-link");
@@ -46,7 +50,12 @@ function openTab(evt, tabName) {
     var currentTab = document.getElementById(tabName);
     if (currentTab) {
         currentTab.style.display = "block";
-        document.documentElement.style.setProperty('--gold-primary', newColor);
+        
+        // Animación: activar
+        if (currentTab.classList) {
+            requestAnimationFrame(() => currentTab.classList.add("active"));
+        }
+document.documentElement.style.setProperty('--gold-primary', newColor);
     }
 
     // Activar botón
@@ -924,3 +933,28 @@ function initStarPicker() {
 
     sel.addEventListener("change", ()=>paint(Number(sel.value||5)));
 }
+
+
+/* ==========================================================
+   UI EXTRAS: progress bar + volver arriba (no rompe lógica)
+   ========================================================== */
+(function initUiExtras(){
+    const bar = document.getElementById("scrollProgress");
+    const topBtn = document.getElementById("toTopBtn");
+    function onScroll(){
+        const doc = document.documentElement;
+        const scrollTop = doc.scrollTop || document.body.scrollTop || 0;
+        const scrollHeight = (doc.scrollHeight || 0) - (doc.clientHeight || 0);
+        const pct = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+        if (bar) bar.style.width = Math.min(100, Math.max(0, pct)) + "%";
+        if (topBtn) topBtn.style.display = scrollTop > 420 ? "flex" : "none";
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+
+    if (topBtn){
+        topBtn.addEventListener("click", () => {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+    }
+})();
