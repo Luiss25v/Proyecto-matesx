@@ -21,6 +21,8 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div id="scrollProgress" class="scroll-progress" aria-hidden="true"></div>
+    <div class="fx-overlay" aria-hidden="true"></div>
 
     <aside class="sidebar">
         <div class="sidebar-header" onclick="openTab(event, 'inicio')">
@@ -544,6 +546,9 @@ C (ej: a->X,b->Y,c->Z)">
         <i class="fab fa-whatsapp"></i>
     </a>
 
+    <button id="toTopBtn" class="to-top" title="Volver arriba" aria-label="Volver arriba">
+        <i class="fas fa-chevron-up"></i>
+    </button>
     <script src="script.js?v=mc1"></script>
     <div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
     <div id="plotTip" class="plot-tip" style="display:none;"></div>
