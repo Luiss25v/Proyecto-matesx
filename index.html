@@ -23,6 +23,7 @@
 <body>
     <div id="scrollProgress" class="scroll-progress" aria-hidden="true"></div>
     <div class="fx-overlay" aria-hidden="true"></div>
+    <div id="sidebarBackdrop" class="sidebar-backdrop" aria-hidden="true"></div>
 
     <aside class="sidebar">
         <div class="sidebar-header" onclick="openTab(event, 'inicio')">
@@ -69,6 +70,9 @@
     <main class="main-content">
         
         <header class="top-header">
+            <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="Abrir menú" title="Menú">
+                <i class="fas fa-bars"></i>
+            </button>
             <div class="xp-badge" id="xpBadge" title="Progreso de misión">XP <span id="xpValue">0</span></div>
             <div class="logo-area">
                 <img src="img/logo-epn.png" alt="Escudo EPN">
