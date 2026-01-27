@@ -995,9 +995,7 @@ const MISSIONS = [
   { id: "clasificacion", label: "Clasificación" },
   { id: "inversa", label: "Función inversa" },
   { id: "compuesta", label: "Función compuesta" },
-  { id: "discreta", label: "Función discreta" },
-  { id: "video", label: "Video" },
-  { id: "resenas", label: "Reseñas" }
+  { id: "discreta", label: "Función discreta" }
 ];
 
 function loadMissions(){
@@ -1045,7 +1043,11 @@ function renderMissions(){
   list.innerHTML = "";
 
   MISSIONS.forEach(m => {
-    const li = document.createElement("li");
+    
+    
+    if (["video","resenas"].includes(m.id)) return;
+if (["video","resenas"].includes(m.id)) return;
+const li = document.createElement("li");
     li.className = "mission-item" + (st[m.id] ? " done" : "");
     const left = document.createElement("div");
     left.className = "left";
