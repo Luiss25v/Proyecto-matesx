@@ -70,6 +70,7 @@ document.documentElement.style.setProperty('--gold-primary', newColor);
 
 // --- CALCULADORAS ---
 function calcCartesian() {
+    try{ awardXp(40, "Producto cartesiano"); }catch(e){}
     const rawA = document.getElementById('setA').value;
     const rawB = document.getElementById('setB').value;
     const resDiv = document.getElementById('resCartesiano');
@@ -357,6 +358,7 @@ function badge(text, type="ok") {
 
 // --------- CLASIFICACIÓN ----------
 function classifyFunction() {
+    try{ awardXp(60, "Clasificación"); }catch(e){}
     const domain = parseList(document.getElementById("classDomain")?.value);
     const codomain = parseList(document.getElementById("classCodomain")?.value);
     const mapping = parseMapping(document.getElementById("classMap")?.value);
@@ -453,6 +455,7 @@ disp(isInjective); disp(isSurjective); disp(isBijective);`;
 
 // --------- INVERSA ----------
 function invertFunction() {
+    try{ awardXp(60, "Inversa"); }catch(e){}
     const domain = parseList(document.getElementById("invDomain")?.value);
     const codomain = parseList(document.getElementById("invCodomain")?.value);
     const mapping = parseMapping(document.getElementById("invMap")?.value);
@@ -541,6 +544,7 @@ end`;
 
 // --------- COMPUESTA ----------
 function composeFunctions() {
+    try{ awardXp(70, "Composición"); }catch(e){}
     const A = parseList(document.getElementById("compDomain")?.value);
     const B = parseList(document.getElementById("compMid")?.value);
     const C = parseList(document.getElementById("compCodomain")?.value);
@@ -632,6 +636,7 @@ fMap = containers.Map(Xf, Yf);
 
 // --------- DISCRETA ----------
 function plotDiscrete() {
+    try{ awardXp(70, "Gráfica discreta"); }catch(e){}
     let xs = parseList(document.getElementById("discX")?.value).map(Number);
     let ys = parseList(document.getElementById("discY")?.value).map(Number);
     const out = document.getElementById("discResult");
@@ -1114,4 +1119,80 @@ function updateMiniMission(id){
 document.addEventListener("DOMContentLoaded", () => {
   renderMissions();
   ensureMiniMissions();
+});
+
+
+/* ==========================================================
+   SIDEBAR DRAWER CONTROLS
+   ========================================================== */
+(function initSidebarDrawer(){
+    const btn = document.getElementById("sidebarToggle");
+    const backdrop = document.getElementById("sidebarBackdrop");
+    function close(){
+        document.body.classList.remove("sidebar-open");
+    }
+    function toggle(){
+        document.body.classList.toggle("sidebar-open");
+    }
+    if (btn) btn.addEventListener("click", toggle);
+    if (backdrop) backdrop.addEventListener("click", close);
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") close();
+    });
+    // cerrar drawer al tocar un link
+    document.addEventListener("click", (e) => {
+        const a = e.target && e.target.closest ? e.target.closest(".tab-link") : null;
+        if (a && window.matchMedia && window.matchMedia("(max-width: 1200px)").matches){
+            close();
+        }
+    });
+})();
+
+
+/* ==========================================================
+   MODO JUEGO: XP + LOGROS (simple, localStorage)
+   ========================================================== */
+const ACHIEVEMENTS = [
+  { id: "xp_300", xp: 300, title: "Aprendiz Lógico", desc: "Alcanza 300 XP" },
+  { id: "xp_700", xp: 700, title: "Explorador de Funciones", desc: "Alcanza 700 XP" },
+  { id: "xp_1200", xp: 1200, title: "Maestro del Dominio", desc: "Alcanza 1200 XP" }
+];
+
+function loadXp(){
+  return parseInt(localStorage.getItem("mc_xp") || "0", 10) || 0;
+}
+function saveXp(v){
+  localStorage.setItem("mc_xp", String(v));
+  const xpEl = document.getElementById("xpValue");
+  if (xpEl) xpEl.textContent = v;
+}
+function loadAch(){
+  try{ return JSON.parse(localStorage.getItem("mc_ach") || "{}") || {}; }catch(e){ return {}; }
+}
+function saveAch(st){ localStorage.setItem("mc_ach", JSON.stringify(st||{})); }
+
+function awardXp(amount, reason){
+  const xp = loadXp() + amount;
+  saveXp(xp);
+  if (typeof showToast === "function") showToast(`+${amount} XP${reason ? " · " + reason : ""}`);
+  checkAchievements(xp);
+}
+
+function checkAchievements(xp){
+  const st = loadAch();
+  let unlocked = 0;
+  ACHIEVEMENTS.forEach(a => {
+    if (!st[a.id] && xp >= a.xp){
+      st[a.id] = true;
+      unlocked++;
+      if (typeof showToast === "function") showToast(`Logro desbloqueado: ${a.title}`);
+    }
+  });
+  if (unlocked) saveAch(st);
+}
+
+// Inicializar XP badge al cargar
+document.addEventListener("DOMContentLoaded", () => {
+  const xp = loadXp();
+  saveXp(xp);
 });
