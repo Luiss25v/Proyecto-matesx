@@ -1162,3 +1162,132 @@ pre, code{ max-width: 100%; overflow-x: auto; }
 
 
 @media (min-width: 1201px){ .main-content{ margin-left:0 !important; width:auto !important; } }
+
+
+
+/* =========================================================
+   VISUAL POLISH v6 (más atractivo, consistente, gamer)
+   ========================================================= */
+
+/* Tipografía y jerarquía */
+h1, h2, h3{
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+}
+h2{
+    font-size: 1.25rem;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+h2::before{
+    content:"";
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: var(--gold-primary);
+    box-shadow: 0 0 18px rgba(255,215,0,0.35);
+}
+
+/* Contenedor principal: aire y consistencia */
+.content-body{
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 22px 18px 30px;
+}
+
+/* Cards: borde neón con pseudo-elemento */
+.info-box, .urban-card, .diagram-box, .matlab-panel, .review-card, .exercise-card{
+    position: relative;
+    overflow: hidden;
+}
+.info-box::before, .urban-card::before, .diagram-box::before, .matlab-panel::before, .review-card::before, .exercise-card::before{
+    content:"";
+    position:absolute;
+    inset:-1px;
+    border-radius: 18px;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(255,215,0,0.32), rgba(0,255,200,0.20), rgba(255,255,255,0.10));
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events:none;
+    opacity: 0.9;
+}
+.info-box::after, .urban-card::after, .diagram-box::after, .matlab-panel::after, .review-card::after, .exercise-card::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background: radial-gradient(600px 220px at 20% 0%, rgba(255,215,0,0.10), transparent 60%);
+    pointer-events:none;
+    opacity: .85;
+}
+
+/* Botones: look más premium */
+button, .action-btn, .matlab-toggle-btn{
+    border-radius: 14px !important;
+}
+button:active, .action-btn:active, .matlab-toggle-btn:active{
+    transform: translateY(0px) scale(0.99);
+}
+
+/* Código MATLAB: mejor legibilidad */
+.matlab-panel pre, pre code{
+    font-size: 0.92rem;
+    line-height: 1.45;
+}
+.matlab-panel pre{
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(0,0,0,0.55);
+    box-shadow: inset 0 0 0 1px rgba(255,215,0,0.08);
+}
+
+/* Scrollbars premium */
+*::-webkit-scrollbar{ width: 10px; height: 10px; }
+*::-webkit-scrollbar-track{ background: rgba(255,255,255,0.06); border-radius: 999px; }
+*::-webkit-scrollbar-thumb{
+    background: linear-gradient(180deg, rgba(255,215,0,0.55), rgba(0,255,200,0.40));
+    border-radius: 999px;
+    border: 2px solid rgba(0,0,0,0.35);
+}
+
+/* Header: línea HUD + brillo */
+.top-header{
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: rgba(0,0,0,0.70);
+    backdrop-filter: blur(12px);
+}
+.top-header::after{
+    content:"";
+    position:absolute;
+    left:0; right:0; bottom:0;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(255,215,0,0.0), rgba(255,215,0,0.55), rgba(0,255,200,0.35), rgba(255,215,0,0.0));
+    box-shadow: 0 0 16px rgba(255,215,0,0.20);
+}
+
+/* Sidebar: suavizar sombra del “canal” */
+.sidebar{
+    box-shadow: 20px 0 60px rgba(0,0,0,0.55);
+}
+
+/* Animación suave de glow (sutil) */
+@keyframes pulseGlow {
+    0%,100% { filter: drop-shadow(0 0 0 rgba(255,215,0,0)); }
+    50% { filter: drop-shadow(0 0 14px rgba(255,215,0,0.22)); }
+}
+.logo-area img{
+    animation: pulseGlow 3.8s ease-in-out infinite;
+}
+
+/* Separadores HUD dentro de secciones */
+.section-divider{
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,215,0,0.35), transparent);
+    margin: 14px 0 16px;
+}
