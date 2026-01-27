@@ -1166,6 +1166,9 @@ function saveXp(v){
   const xpEl = document.getElementById("xpValue");
   if (xpEl) xpEl.textContent = v;
 }
+// HUD
+updateLevelHud(v);
+
 function loadAch(){
   try{ return JSON.parse(localStorage.getItem("mc_ach") || "{}") || {}; }catch(e){ return {}; }
 }
@@ -1196,3 +1199,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const xp = loadXp();
   saveXp(xp);
 });
+
+
+/* ==========================================================
+   LEVEL HUD (LV + barra de XP)
+   ========================================================== */
+function updateLevelHud(xp){
+  const levelSize = 500; // XP por nivel
+  const level = Math.floor((xp || 0) / levelSize) + 1;
+  const inLevel = (xp || 0) % levelSize;
+  const pct = Math.round((inLevel / levelSize) * 100);
+
+  const lvlEl = document.getElementById("levelValue");
+  const barEl = document.getElementById("xpBar");
+  if (lvlEl) lvlEl.textContent = level;
+  if (barEl) barEl.style.width = pct + "%";
+}
