@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Matemáticas Computacionales | EPN</title>
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -43,6 +43,24 @@
                 <li><a href="#" class="tab-link" onclick="openTab(event, 'resenas')"><i class="fas fa-comments"></i> Reseñas</a></li>
             </ul>
         </nav>
+        
+        <div class="mission-panel" id="missionPanel">
+            <div class="mission-head">
+                <div class="mission-title">
+                    <i class="fas fa-flag-checkered"></i>
+                    <span>Modo Misión</span>
+                </div>
+                <button class="mission-reset" type="button" onclick="resetMissions()" title="Reiniciar progreso">
+                    <i class="fas fa-rotate-left"></i>
+                </button>
+            </div>
+            <div class="mission-progress">
+                <div class="mission-progress-bar"><span id="missionBarFill"></span></div>
+                <div class="mission-progress-text"><span id="missionPct">0%</span> completado</div>
+            </div>
+            <ul class="mission-list" id="missionList"></ul>
+        </div>
+
         <div class="sidebar-footer">
             <p>Samuel Robayo | EPN 2026</p>
         </div>
@@ -51,6 +69,7 @@
     <main class="main-content">
         
         <header class="top-header">
+            <div class="xp-badge" id="xpBadge" title="Progreso de misión">XP <span id="xpValue">0</span></div>
             <div class="logo-area">
                 <img src="img/logo-epn.png" alt="Escudo EPN">
                 <div class="university-info">
