@@ -878,19 +878,6 @@ body{
 
 /* En móvil: la sidebar pasa arriba para que NO recorte pantalla */
 @media (max-width: 980px){
-    body{ flex-direction: column; }
-    .sidebar{
-        position: sticky;
-        top: 0;
-        width: 100%;
-        height: auto;
-        border-right: none;
-        border-bottom: 3px solid var(--gold-primary);
-    }
-    .main-content{
-        margin-left: 0;
-        width: 100%;
-    }
     .sidebar nav ul{
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -1071,3 +1058,67 @@ body{
 @media (max-width: 980px){
     .xp-badge{ position: static; margin: 10px 12px 0; align-self: flex-start; }
 }
+
+
+
+/* =========================
+   SIDEBAR DRAWER (evita recortes en pantallas medianas/pequeñas)
+   ========================= */
+.sidebar-toggle{
+    display: none;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(0,0,0,0.35);
+    color: var(--text-white);
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    cursor: pointer;
+    margin-right: 12px;
+}
+.sidebar-toggle i{ color: var(--gold-primary); }
+
+.sidebar-backdrop{
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s ease;
+    z-index: 900;
+}
+
+/* En <=1200px la sidebar se vuelve drawer para evitar recortes */
+@media (max-width: 1200px){
+    .sidebar-toggle{ display: inline-flex; align-items:center; justify-content:center; }
+    .sidebar{
+        transform: translateX(-102%);
+        transition: transform .22s ease;
+        width: min(88vw, 360px);
+        height: var(--app-height);
+        position: fixed;
+        top: 0; left: 0;
+        border-right: 3px solid var(--gold-primary);
+    }
+    body.sidebar-open .sidebar{ transform: translateX(0%); }
+    body.sidebar-open .sidebar-backdrop{ opacity: 1; pointer-events: auto; }
+
+    .main-content{
+        margin-left: 0 !important;
+        width: 100% !important;
+        min-height: var(--app-height);
+    }
+}
+
+/* Mantener layout original en pantallas grandes */
+@media (min-width: 1201px){
+    .sidebar{ transform: none; }
+    .sidebar-backdrop{ display:none; }
+}
+
+/* Evitar recorte horizontal por contenido ancho */
+.main-content, .content-body, .tab-content, .info-box, .urban-card, .diagram-box{
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+pre, code{ max-width: 100%; overflow-x: auto; }
