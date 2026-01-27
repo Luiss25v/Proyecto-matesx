@@ -958,3 +958,19 @@ function initStarPicker() {
         });
     }
 })();
+
+
+/* ==========================================================
+   FIX: estabilidad de altura en móvil (evita saltos de tamaño)
+   ========================================================== */
+(function setAppHeight(){
+    const root = document.documentElement;
+    function apply(){
+        // iOS/Android: innerHeight cambia con la barra del navegador al hacer scroll.
+        // Congelamos altura real en px para mantener layout consistente.
+        root.style.setProperty('--app-height', window.innerHeight + 'px');
+    }
+    apply();
+    window.addEventListener('resize', apply);
+    window.addEventListener('orientationchange', apply);
+})();
