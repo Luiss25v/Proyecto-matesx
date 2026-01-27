@@ -66,6 +66,8 @@ document.documentElement.style.setProperty('--gold-primary', newColor);
     }
     try{ ensureMiniMissions(); updateMiniMission(tabName); }catch(e){}
 
+
+    try{ cleanupNonGameTabs(); }catch(e){}
 }
 
 // --- CALCULADORAS ---
@@ -1215,3 +1217,32 @@ function updateLevelHud(xp){
   if (lvlEl) lvlEl.textContent = level;
   if (barEl) barEl.style.width = pct + "%";
 }
+
+
+/* ==========================================================
+   FX: glow que sigue el cursor (ligero)
+   ========================================================== */
+(function initCursorGlow(){
+  const root = document.documentElement;
+  function setPos(x,y){
+    root.style.setProperty('--mx', x + 'px');
+    root.style.setProperty('--my', y + 'px');
+  }
+  window.addEventListener('mousemove', (e)=>{ setPos(e.clientX, e.clientY); }, { passive:true });
+  window.addEventListener('touchmove', (e)=>{
+    const t = e.touches && e.touches[0];
+    if (t) setPos(t.clientX, t.clientY);
+  }, { passive:true });
+  setPos(window.innerWidth * 0.5, window.innerHeight * 0.25);
+})();
+
+
+function cleanupNonGameTabs(){
+  ["video","resenas"].forEach(id=>{
+    const tab = document.getElementById(id);
+    if(!tab) return;
+    const mini = tab.querySelector(".mission-mini");
+    if(mini) mini.remove();
+  });
+}
+document.addEventListener("DOMContentLoaded", cleanupNonGameTabs);
