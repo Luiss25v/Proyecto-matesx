@@ -1,4 +1,5 @@
 :root {
+    --app-height: 100vh; /* se actualiza por JS para evitar saltos al hacer scroll en móvil */
     /* BASE (Se sobrescribe por JS) */
     --bg-obsidian: #050505;     
     --bg-carbon: #0f0f0f;       
@@ -21,7 +22,7 @@ body {
     font-family: var(--font-body); 
     line-height: 1.6; 
     overflow-x: hidden; 
-    transition: all 0.5s ease;
+    transition: background-color 0.4s ease, color 0.4s ease;
 }
 
 /* --- TIPOGRAFÍA Y COLORES DINÁMICOS --- */
@@ -53,7 +54,7 @@ h1, h2, h3, h4, h5, h6, .urban-title, .mega-title {
 
 /* --- ESTRUCTURA --- */
 .sidebar {
-    width: var(--sidebar-width); background: var(--bg-obsidian); height: 100vh;
+    width: var(--sidebar-width); background: var(--bg-obsidian); height: var(--app-height);
     position: fixed; top: 0; left: 0; 
     border-right: 3px solid var(--gold-primary);
     display: flex; flex-direction: column; z-index: 1000;
@@ -103,7 +104,7 @@ h1, h2, h3, h4, h5, h6, .urban-title, .mega-title {
 
 .main-content {
     margin-left: var(--sidebar-width); width: calc(100% - var(--sidebar-width));
-    min-height: 100vh; background-color: var(--bg-carbon);
+    min-height: var(--app-height); background-color: var(--bg-carbon);
     background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
                       linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
     background-size: 60px 60px;
@@ -754,4 +755,106 @@ input:focus, textarea:focus, select:focus{
 /* Prefiere reducir movimiento */
 @media (prefers-reduced-motion: reduce){
     *{ transition: none !important; animation: none !important; }
+}
+
+
+/* =========================================================
+   VISUAL UPGRADE PACK v2 (más consistente + más atractivo)
+   ========================================================= */
+
+/* Mejor scrollbar (sidebar y paneles) */
+.sidebar nav::-webkit-scrollbar,
+pre::-webkit-scrollbar,
+textarea::-webkit-scrollbar{
+    width: 10px;
+}
+.sidebar nav::-webkit-scrollbar-track,
+pre::-webkit-scrollbar-track,
+textarea::-webkit-scrollbar-track{
+    background: rgba(255,255,255,0.04);
+}
+.sidebar nav::-webkit-scrollbar-thumb,
+pre::-webkit-scrollbar-thumb,
+textarea::-webkit-scrollbar-thumb{
+    background: rgba(255,215,0,0.22);
+    border-radius: 999px;
+    border: 2px solid rgba(0,0,0,0.35);
+}
+.sidebar nav::-webkit-scrollbar-thumb:hover,
+pre::-webkit-scrollbar-thumb:hover,
+textarea::-webkit-scrollbar-thumb:hover{
+    background: rgba(255,215,0,0.35);
+}
+
+/* Contenedores: look más uniforme */
+.card, .info-box, .urban-card, .diagram-box, .exercise-card{
+    background: rgba(12,12,12,0.92);
+    border: 1px solid rgba(255,255,255,0.10);
+    box-shadow: 0 22px 60px rgba(0,0,0,0.55);
+}
+
+/* Borde “neón” sutil sin recargar */
+.card, .info-box, .urban-card, .diagram-box, .matlab-panel, .exercise-card{
+    position: relative;
+    overflow: hidden;
+}
+.card::before, .info-box::before, .urban-card::before, .diagram-box::before, .matlab-panel::before, .exercise-card::before{
+    content:"";
+    position:absolute; inset:-2px;
+    background: radial-gradient(380px 220px at 15% 10%, rgba(255,215,0,0.16), transparent 60%),
+                radial-gradient(420px 260px at 85% 0%, rgba(0,255,200,0.12), transparent 60%);
+    opacity: 0.9;
+    pointer-events:none;
+    mix-blend-mode: screen;
+}
+.card > *, .info-box > *, .urban-card > *, .diagram-box > *, .matlab-panel > *, .exercise-card > *{
+    position: relative;
+    z-index: 1;
+}
+
+/* Jerarquía tipográfica más clara */
+.content-body h2{
+    font-size: 1.55rem;
+    margin-bottom: 18px;
+}
+.content-body h3{
+    font-size: 1.15rem;
+    margin-bottom: 10px;
+}
+
+/* Botones: consistencia visual */
+.action-btn, .cta-button, .matlab-toggle-btn{
+    border-radius: 12px !important;
+    letter-spacing: 0.6px;
+}
+.action-btn:active, .cta-button:active, .matlab-toggle-btn:active{
+    transform: translateY(0px) scale(0.99);
+}
+
+/* Inputs: mejor contraste */
+input, textarea, select{
+    background: rgba(0,0,0,0.55) !important;
+    border: 1px solid rgba(255,255,255,0.14) !important;
+    color: var(--text-white) !important;
+}
+
+/* Layout helper para grids (si ya existe en HTML se beneficiará) */
+.grid-2{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+    align-items: start;
+}
+@media (max-width: 980px){
+    .grid-2{ grid-template-columns: 1fr; }
+    :root{ --sidebar-width: 260px; }
+    html{ font-size: 16px; }
+}
+
+/* Mejor estabilidad en móviles: evita saltos */
+@supports (height: 100dvh){
+    :root{ --app-height: 100dvh; }
+}
+@supports (height: 100svh){
+    :root{ --app-height: 100svh; }
 }
