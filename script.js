@@ -64,6 +64,8 @@ document.documentElement.style.setProperty('--gold-primary', newColor);
         evt.currentTarget.style.borderColor = newColor;
         evt.currentTarget.style.color = newColor;
     }
+    try{ ensureMiniMissions(); updateMiniMission(tabName); }catch(e){}
+
 }
 
 // --- CALCULADORAS ---
@@ -974,3 +976,142 @@ function initStarPicker() {
     window.addEventListener('resize', apply);
     window.addEventListener('orientationchange', apply);
 })();
+
+
+/* ==========================================================
+   MODO MISIÓN / PROGRESO (localStorage)
+   ========================================================== */
+const MISSIONS = [
+  { id: "prod-cartesiano", label: "Producto cartesiano" },
+  { id: "funciones", label: "Funciones" },
+  { id: "ejercicios", label: "Ejemplos / Hojas" },
+  { id: "clasificacion", label: "Clasificación" },
+  { id: "inversa", label: "Función inversa" },
+  { id: "compuesta", label: "Función compuesta" },
+  { id: "discreta", label: "Función discreta" },
+  { id: "video", label: "Video" },
+  { id: "resenas", label: "Reseñas" }
+];
+
+function loadMissions(){
+  try{
+    return JSON.parse(localStorage.getItem("mc_missions") || "{}") || {};
+  }catch(e){ return {}; }
+}
+function saveMissions(state){
+  localStorage.setItem("mc_missions", JSON.stringify(state || {}));
+}
+function getMissionState(){
+  return loadMissions();
+}
+function setMissionDone(id, done=true){
+  const st = loadMissions();
+  st[id] = !!done;
+  saveMissions(st);
+  renderMissions();
+  updateMiniMission(id);
+}
+function resetMissions(){
+  localStorage.removeItem("mc_missions");
+  renderMissions();
+  // actualizar mini barras
+  MISSIONS.forEach(m => updateMiniMission(m.id));
+  if (typeof showToast === "function") showToast("Progreso reiniciado");
+}
+
+function computeMissionStats(){
+  const st = loadMissions();
+  const total = MISSIONS.length;
+  const done = MISSIONS.filter(m => st[m.id]).length;
+  const pct = total ? Math.round((done/total)*100) : 0;
+  return { total, done, pct };
+}
+
+function renderMissions(){
+  const list = document.getElementById("missionList");
+  const fill = document.getElementById("missionBarFill");
+  const pctEl = document.getElementById("missionPct");
+  const xpEl = document.getElementById("xpValue");
+
+  if (!list) return;
+  const st = loadMissions();
+  list.innerHTML = "";
+
+  MISSIONS.forEach(m => {
+    const li = document.createElement("li");
+    li.className = "mission-item" + (st[m.id] ? " done" : "");
+    const left = document.createElement("div");
+    left.className = "left";
+    left.innerHTML = `<i class="fas ${st[m.id] ? "fa-circle-check" : "fa-circle"}"></i>
+                      <span class="label">${m.label}</span>`;
+    const state = document.createElement("span");
+    state.className = "state";
+    state.textContent = st[m.id] ? "Completada" : "Pendiente";
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = st[m.id] ? "Desmarcar" : "Completar";
+    btn.addEventListener("click", () => setMissionDone(m.id, !st[m.id]));
+
+    li.appendChild(left);
+    li.appendChild(state);
+    li.appendChild(btn);
+    list.appendChild(li);
+  });
+
+  const stats = computeMissionStats();
+  if (fill) fill.style.width = stats.pct + "%";
+  if (pctEl) pctEl.textContent = stats.pct + "%";
+  if (xpEl) xpEl.textContent = stats.done * 120; // XP simple (120 por misión)
+
+  // feedback visual en gold-primary según progreso
+}
+
+function ensureMiniMissions(){
+  // Inserta una mini barra al inicio de cada tab-content (solo una vez)
+  const st = loadMissions();
+  MISSIONS.forEach(m => {
+    const tab = document.getElementById(m.id);
+    if (!tab) return;
+    if (tab.querySelector(".mission-mini")) return;
+
+    const bar = document.createElement("div");
+    bar.className = "mission-mini";
+    bar.dataset.mission = m.id;
+    bar.innerHTML = `
+      <div class="mini-left">
+        <i class="fas fa-bullseye"></i>
+        <div class="mini-title">Misión: ${m.label}</div>
+      </div>
+      <button type="button" class="mini-btn ${st[m.id] ? "done" : ""}">
+        ${st[m.id] ? "Completada ✓" : "Marcar completada"}
+      </button>
+    `;
+    const btn = bar.querySelector("button");
+    btn.addEventListener("click", () => {
+      const now = !!loadMissions()[m.id];
+      setMissionDone(m.id, !now);
+      if (typeof showToast === "function") showToast(!now ? "Misión completada" : "Misión desmarcada");
+    });
+
+    tab.insertBefore(bar, tab.firstChild);
+  });
+}
+
+function updateMiniMission(id){
+  const st = loadMissions();
+  const tab = document.getElementById(id);
+  if (!tab) return;
+  const mini = tab.querySelector(".mission-mini");
+  if (!mini) return;
+  const btn = mini.querySelector("button");
+  if (!btn) return;
+  const done = !!st[id];
+  btn.classList.toggle("done", done);
+  btn.textContent = done ? "Completada ✓" : "Marcar completada";
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  renderMissions();
+  ensureMiniMissions();
+});
