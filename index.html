@@ -30,6 +30,7 @@
             <img src="img/buho.png" alt="Logo MathBot" class="sidebar-logo">
             <p style="font-size: 0.8rem; color: var(--gold-primary); letter-spacing: 2px; font-weight: bold; margin-top: 15px;">GAMER EDITION</p>
         </div>
+        <div class="sidebar-scroll">
         <nav>
             <ul>
                 <li><a href="#" class="tab-link active" onclick="openTab(event, 'inicio')"><i class="fas fa-robot"></i> Inicio</a></li>
@@ -62,6 +63,7 @@
             <ul class="mission-list" id="missionList"></ul>
         </div>
 
+        </div>
         <div class="sidebar-footer">
             <p>Samuel Robayo | EPN 2026</p>
         </div>
@@ -73,7 +75,10 @@
             <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="Abrir menú" title="Menú">
                 <i class="fas fa-bars"></i>
             </button>
-            <div class="xp-badge" id="xpBadge" title="Progreso de misión">XP <span id="xpValue">0</span></div>
+            <div class="xp-badge" id="xpBadge" title="Progreso de juego">
+  <div class="xp-top">LV <span id="levelValue">1</span> · XP <span id="xpValue">0</span></div>
+  <div class="xp-bar"><span id="xpBar"></span></div>
+</div>
             <div class="logo-area">
                 <img src="img/logo-epn.png" alt="Escudo EPN">
                 <div class="university-info">
