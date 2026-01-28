@@ -1444,3 +1444,25 @@ body{
         padding-left: 0 !important;
     }
 }
+
+
+/* =========================
+   FIX: Sidebar SIEMPRE visible (sin drawer)
+   ========================= */
+@media (max-width: 1200px){
+    .sidebar-toggle{ display: none !important; }
+    .sidebar-backdrop{ display: none !important; opacity: 0 !important; pointer-events: none !important; }
+    .sidebar{
+        transform: none !important;
+        width: var(--sidebar-width) !important;
+        position: fixed !important;
+        top: 0; left: 0;
+        height: var(--app-height) !important;
+    }
+    body.sidebar-open .sidebar{ transform: none !important; }
+    .main-content{
+        padding-left: var(--sidebar-width) !important;
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+}
