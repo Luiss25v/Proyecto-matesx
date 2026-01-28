@@ -1839,3 +1839,21 @@ body{
   .sidebar{ width: 100% !important; height: auto !important; position: sticky !important; top: 0; }
   .main-content{ height: auto !important; overflow: visible !important; }
 }
+
+
+/* =========================
+   FULLWIDTH FIX v26
+   Quita el centrado (max-width + margin auto) que crea un "vacío" lateral.
+   ========================= */
+.content-body{
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 24px 24px 34px !important;
+    box-sizing: border-box !important;
+}
+
+/* En pantallas grandes, un poquito más de aire */
+@media (min-width: 1400px){
+  .content-body{ padding-left: 36px !important; padding-right: 36px !important; }
+}
