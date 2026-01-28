@@ -50,6 +50,12 @@ function openTab(evt, tabName) {
     var currentTab = document.getElementById(tabName);
     if (currentTab) {
         currentTab.style.display = "block";
+        // UX: al cambiar de pestaña, vuelve arriba del panel central
+        try{
+            const scroller = document.querySelector(".main-content");
+            if (scroller) scroller.scrollTo({ top: 0, behavior: "smooth" });
+        }catch(e){}
+
         
         // Animación: activar
         if (currentTab.classList) {
@@ -1362,3 +1368,23 @@ function highlightTabLink(tabName){
     }
   }
 }
+
+
+/* ==========================================================
+   FIX v17: activar tab por defecto SIEMPRE
+   ========================================================== */
+(function initDefaultTabVisible_v17(){
+  function run(){
+    const active = document.querySelector(".tab-content.active") || document.getElementById("inicio") || document.querySelector(".tab-content");
+    const id = active && active.id ? active.id : "inicio";
+    try{
+      if (typeof openTab === "function") openTab(null, id);
+      else if (active){ active.style.display="block"; active.classList.add("active"); }
+    }catch(e){
+      const first = document.getElementById("inicio") || document.querySelector(".tab-content");
+      if (first){ first.style.display="block"; first.classList.add("active"); }
+    }
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run);
+  else run();
+})();
