@@ -21,10 +21,13 @@ body {
     display: block; color: var(--text-white); 
     font-family: var(--font-body); 
     line- 
-    overflow-x: hidden; 
+     
     transition: background-color 0.4s ease, color 0.4s ease;
 
     align-items: stretch;
+
+    overflow: hidden;
+    overscroll-behavior: none;
 }
 
 /* --- TIPOGRAFÍA Y COLORES DINÁMICOS --- */
@@ -115,7 +118,9 @@ h1, h2, h3, h4, h5, h6, .urban-title, .mega-title {
 }
 
 .main-content{
-    min-height: var(--app-height);
+    height: var(--app-height);
+    overflow-y: auto;
+    overflow-x: hidden;
     width: 100%;
     padding-left: var(--sidebar-width);
     background-color: var(--bg-carbon);
@@ -123,6 +128,8 @@ h1, h2, h3, h4, h5, h6, .urban-title, .mega-title {
         linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
     background-size: 60px 60px;
+    scroll-behavior: smooth;
+    overscroll-behavior: contain;
 }
 
 .top-header {
@@ -862,6 +869,9 @@ input, textarea, select{
 }
 @media (max-width: 980px){
     .sidebar{ position: sticky; top:0; left:0; width:100%; height:auto; border-right:none; border-bottom:3px solid var(--gold-primary); }
+    .main-content{ padding-left:0; }
+
+    .sidebar{ position: sticky; top:0; left:0; width:100%; height:auto; border-right:none; border-bottom:3px solid var(--gold-primary); }
     .main-content{ padding-left: 0; }
 
     .grid-2{ grid-template-columns: 1fr; }
@@ -887,6 +897,8 @@ html, body{
     min-height: var(--app-height);
 
   overflow-x: hidden;
+
+    overscroll-behavior: none;
 }
 body{
     padding-bottom: env(safe-area-inset-bottom);
@@ -1391,3 +1403,7 @@ input, textarea, select{
 .info-box, .urban-card, .diagram-box, .matlab-panel, .review-card, .exercise-card{
   box-shadow: 0 18px 44px rgba(0,0,0,0.50);
 }
+
+
+/* Evita saltos de ancho por scrollbar */
+.main-content{ scrollbar-gutter: stable; }
