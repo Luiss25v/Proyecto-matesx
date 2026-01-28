@@ -21,8 +21,11 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <a class="skip-link" href="#mainContent">Saltar al contenido</a>
+
     <div id="scrollProgress" class="scroll-progress" aria-hidden="true"></div>
     <div class="fx-overlay" aria-hidden="true"></div>
+    <canvas id="particlesCanvas" aria-hidden="true"></canvas>
     <div id="sidebarBackdrop" class="sidebar-backdrop" aria-hidden="true"></div>
 
     <aside class="sidebar">
@@ -31,6 +34,11 @@
             <p style="font-size: 0.8rem; color: var(--gold-primary); letter-spacing: 2px; font-weight: bold; margin-top: 15px;">GAMER EDITION</p>
         </div>
         <div class="sidebar-scroll">
+        <div class="sidebar-search">
+            <i class="fas fa-search"></i>
+            <input id="sidebarSearch" type="text" placeholder="Buscar sección..." autocomplete="off" />
+        </div>
+
         <nav>
             <ul>
                 <li><a href="#" class="tab-link active" onclick="openTab(event, 'inicio')"><i class="fas fa-robot"></i> Inicio</a></li>
@@ -69,15 +77,22 @@
         </div>
     </aside>
 
-    <main class="main-content">
+    <main class="main-content" id="mainContent">
         
         <header class="top-header">
+            <div class="section-pill" id="currentSection" title="Sección actual">Inicio</div>
+
             <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="Abrir menú" title="Menú">
                 <i class="fas fa-bars"></i>
             </button>
             <div class="xp-badge" id="xpBadge" title="Progreso de juego">
   <div class="xp-top">LV <span id="levelValue">1</span> · XP <span id="xpValue">0</span></div>
   <div class="xp-bar"><span id="xpBar"></span></div>
+  <div class="xp-row">
+    <span class="streak" title="Racha diaria"><i class="fas fa-fire"></i> <span id="streakValue">1</span></span>
+    <button id="achBtn" class="hud-btn" type="button" title="Ver logros"><i class="fas fa-trophy"></i></button>
+    <button id="soundBtn" class="hud-btn" type="button" title="Sonido: off"><i class="fas fa-volume-mute"></i></button>
+  </div>
 </div>
             <div class="logo-area">
                 <img src="img/logo-epn.png" alt="Escudo EPN">
@@ -256,6 +271,50 @@ end</code></pre>
                         </div>
                     </div>
                 </div>
+                <div class="card" id="practiceCard">
+                    <div class="topic-header"><h2>MODO PRÁCTICA</h2><span class="badge">Nuevo</span></div>
+                    <p class="soft">Genera ejercicios aleatorios, responde y gana XP (solo en secciones de práctica/cálculo).</p>
+
+                    <div class="grid-2">
+                        <div class="info-box">
+                            <h3><i class="fas fa-dice"></i> Generar ejercicio</h3>
+                            <label class="label">Tema</label>
+                            <select id="practiceTopic">
+                                <option value="cartesiano">Producto cartesiano</option>
+                                <option value="composicion">Función compuesta</option>
+                                <option value="inversa">Función inversa</option>
+                                <option value="funcion">¿Es función?</option>
+                                <option value="discreta">Función discreta</option>
+                            </select>
+                            <button class="action-btn primary" type="button" id="genPracticeBtn"><i class="fas fa-bolt"></i> Generar</button>
+                            <div class="section-divider"></div>
+                            <div class="question-box" id="practiceQuestion">Presiona <b>Generar</b> para empezar.</div>
+                        </div>
+
+                        <div class="info-box">
+                            <h3><i class="fas fa-pen"></i> Respuesta</h3>
+                            <label class="label">Tu respuesta</label>
+                            <input id="practiceAnswer" type="text" placeholder="Escribe tu respuesta aquí..." />
+                            <div class="row">
+                                <button class="action-btn" type="button" id="checkPracticeBtn"><i class="fas fa-check"></i> Verificar</button>
+                                <button class="action-btn" type="button" id="hintPracticeBtn"><i class="fas fa-lightbulb"></i> Pista</button>
+                            </div>
+                            <div class="feedback" id="practiceFeedback"></div>
+                            <div class="section-divider"></div>
+                            <div class="row">
+                                <button class="action-btn" type="button" id="exportCsvBtn"><i class="fas fa-file-csv"></i> Exportar CSV</button>
+                                <button class="action-btn" type="button" id="exportJsonBtn"><i class="fas fa-file-code"></i> Exportar JSON</button>
+                                <button class="action-btn danger" type="button" id="clearPracticeBtn"><i class="fas fa-trash"></i> Limpiar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-sub">
+                        <h3><i class="fas fa-clock-rotate-left"></i> Historial</h3>
+                        <div class="history" id="practiceHistory"></div>
+                    </div>
+                </div>
+
             </div>
 
             <!-- ============================= -->
@@ -577,8 +636,26 @@ C (ej: a->X,b->Y,c->Z)">
     <button id="toTopBtn" class="to-top" title="Volver arriba" aria-label="Volver arriba">
         <i class="fas fa-chevron-up"></i>
     </button>
-    <script src="script.js?v=mc_final"></script>
+    <script src="script.js?v=mc_plus3"></script>
     <div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
     <div id="plotTip" class="plot-tip" style="display:none;"></div>
+
+    <!-- Achievements Modal -->
+    <div id="achModal" class="modal" aria-hidden="true">
+      <div class="modal-backdrop" data-close="true"></div>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="achTitle">
+        <div class="modal-head">
+          <h3 id="achTitle"><i class="fas fa-trophy"></i> Logros</h3>
+          <button class="modal-close" type="button" data-close="true" aria-label="Cerrar"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="ach-grid" id="achGrid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Achievement Popup -->
+    <div id="achPopup" class="ach-popup" aria-live="polite" aria-atomic="true"></div>
+
 </body>
 </html>
