@@ -1412,8 +1412,10 @@ body{
     height: var(--app-height);
     overflow-y: auto;
     overflow-x: hidden;
-    padding-left: var(--sidebar-width);
-    width: 100%;
+    padding-left: 0;
+    margin-left: var(--sidebar-width);
+    width: calc(100% - var(--sidebar-width));
+width: 100%;
     overscroll-behavior: contain;
     scrollbar-gutter: stable;
 }
@@ -1762,3 +1764,26 @@ body{
 }
 .hist-item.ok .tag{ border-color: rgba(0,255,200,0.30); background: rgba(0,255,200,0.08); }
 .hist-item.bad .tag{ border-color: rgba(255,80,80,0.30); background: rgba(255,80,80,0.08); }
+
+
+/* =========================
+   GAPFIX: evita espacio vacío a la izquierda (desktop)
+   ========================= */
+@media (min-width: 981px){
+  .main-content{
+    padding-left: 0 !important;
+    margin-left: var(--sidebar-width) !important;
+    width: calc(100% - var(--sidebar-width)) !important;
+  }
+  .top-header .section-pill{
+    left: 18px !important;
+  }
+}
+
+@media (min-width: 981px){
+  .section-pill{ left: 18px !important; }
+}
+
+@media (max-width: 980px){
+  .main-content{ margin-left: 0 !important; width: 100% !important; }
+}
