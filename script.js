@@ -1323,3 +1323,42 @@ function activateDefaultTab(){
 document.addEventListener("DOMContentLoaded", () => {
   try{ activateDefaultTab(); }catch(e){}
 });
+
+
+/* ==========================================================
+   FIX v16: asegurar tab inicial visible (sin depender de CSS)
+   ========================================================== */
+(function forceInitialTab(){
+  function run(){
+    try{
+      // Si ya hay un tab visible, actívalo por openTab para que tenga .active + color
+      const visible = document.querySelector('.tab-content[style*="display: block"]') || document.getElementById('inicio');
+      if (visible && visible.id){
+        openTab(null, visible.id); try{highlightTabLink(visible.id);}catch(e){}
+      }else{
+        openTab(null, 'inicio'); try{highlightTabLink('inicio');}catch(e){}
+      }
+    }catch(e){
+      // fallback: mostrar inicio a la fuerza
+      const t = document.getElementById('inicio');
+      if (t){ t.style.display='block'; t.classList.add('active'); }
+    }
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run);
+  else run();
+})();
+
+
+function highlightTabLink(tabName){
+  const links = document.getElementsByClassName("tab-link");
+  for (let i=0;i<links.length;i++){
+    const on = links[i].getAttribute("onclick") || "";
+    if (on.includes("'" + tabName + "'") || on.includes('"' + tabName + '"')){
+      links[i].className += " active";
+      const c = (typeof sectionColors !== "undefined" && sectionColors[tabName]) ? sectionColors[tabName] : '#FFD700';
+      links[i].style.borderColor = c;
+      links[i].style.color = c;
+      break;
+    }
+  }
+}
