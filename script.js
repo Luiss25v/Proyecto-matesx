@@ -1388,3 +1388,30 @@ function highlightTabLink(tabName){
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run);
   else run();
 })();
+
+/* ==========================================================
+   RELIABLE_INIT_v18: asegurar que SIEMPRE se vea contenido
+   ========================================================== */
+(function reliableInitV18(){
+  function activate(tabId){
+    try{
+      if (typeof openTab === "function") {
+        openTab(null, tabId);
+      } else {
+        // fallback: display toggling
+        const tabs = document.getElementsByClassName("tab-content");
+        for (let i=0;i<tabs.length;i++){ tabs[i].style.display="none"; tabs[i].classList.remove("active"); }
+        const t = document.getElementById(tabId) || document.getElementById("inicio") || tabs[0];
+        if (t){ t.style.display="block"; t.classList.add("active"); }
+      }
+    }catch(e){
+      const t = document.getElementById("inicio");
+      if (t){ t.style.display="block"; t.classList.add("active"); }
+    }
+  }
+  if (document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", () => activate("inicio"));
+  } else {
+    activate("inicio");
+  }
+})();
