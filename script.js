@@ -1265,3 +1265,29 @@ function cleanupNonGameTabs(){
   });
 }
 document.addEventListener("DOMContentLoaded", cleanupNonGameTabs);
+
+
+/* ==========================================================
+   FIX: mostrar una pestaña por defecto (evita pantalla vacía)
+   ========================================================== */
+(function initDefaultTabVisible(){
+  function run(){
+    // intenta activar la pestaña que ya viene visible en HTML, si existe
+    const visible = document.querySelector('.tab-content[style*="display: block"]') || document.getElementById('inicio') || document.querySelector('.tab-content');
+    if (!visible) return;
+
+    // Si no está activa, actívala
+    visible.classList && visible.classList.add('active');
+
+    // Asegura color por sección y menú coherente
+    const id = visible.id || 'inicio';
+    try{
+      document.documentElement.style.setProperty('--gold-primary', (sectionColors && sectionColors[id]) ? sectionColors[id] : '#FFD700');
+    }catch(e){}
+  }
+  if (document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", run);
+  } else {
+    run();
+  }
+})();
