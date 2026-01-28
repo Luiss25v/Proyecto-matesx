@@ -76,6 +76,9 @@ document.documentElement.style.setProperty('--gold-primary', newColor);
     }catch(e){}
     // Si no hubo evento (carga inicial), activa el link correspondiente
     if (!evt) { try{ activateLinkForTab(tabName); }catch(e){} }
+
+    try{ localStorage.setItem("mc_last_tab", tabName); }catch(e){}
+    try{ setCurrentSection(tabName); }catch(e){}
 }
 
 // --- CALCULADORAS ---
@@ -1200,7 +1203,8 @@ function checkAchievements(xp){
     if (!st[a.id] && xp >= a.xp){
       st[a.id] = true;
       unlocked++;
-      if (typeof showToast === "function") showToast(`Logro desbloqueado: ${a.title}`);
+      if (typeof showAchievementPopup === "function") showAchievementPopup(a.title, a.desc);
+      else if (typeof showToast === "function") showToast(`Logro desbloqueado: ${a.title}`);
     }
   });
   if (unlocked) saveAch(st);
@@ -1292,3 +1296,585 @@ function activateLinkForTab(tabName){
     }
   });
 }
+
+
+/* =========================
+   UX: títulos por pestaña
+   ========================= */
+const TAB_TITLES = {
+  "inicio": "Inicio",
+  "prod-cartesiano": "Producto Cartesiano",
+  "funciones": "Funciones",
+  "ejercicios": "Ejemplos / Hojas",
+  "clasificacion": "Clasificación",
+  "inversa": "Función Inversa",
+  "compuesta": "Función Compuesta",
+  "discreta": "Función Discreta",
+  "video": "Video Explicativo",
+  "resenas": "Reseñas"
+};
+function setCurrentSection(tabName){
+  const pill = document.getElementById("currentSection");
+  if (!pill) return;
+  pill.textContent = TAB_TITLES[tabName] || tabName;
+}
+
+
+/* =========================
+   Sidebar: buscador de secciones
+   ========================= */
+(function initSidebarSearch(){
+  function run(){
+    const input = document.getElementById("sidebarSearch");
+    if (!input) return;
+    const items = Array.from(document.querySelectorAll(".sidebar nav ul li"));
+    const links = Array.from(document.querySelectorAll(".sidebar nav .tab-link"));
+
+    function norm(s){ return (s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,""); }
+
+    function apply(){
+      const q = norm(input.value.trim());
+      items.forEach(li=>{
+        const txt = norm(li.textContent);
+        li.style.display = (!q || txt.includes(q)) ? "" : "none";
+      });
+    }
+
+    input.addEventListener("input", apply);
+
+    // Atajo: "/" enfoca buscador
+    document.addEventListener("keydown", (e)=>{
+      if (e.key === "/" && document.activeElement !== input){
+        e.preventDefault();
+        input.focus();
+      }
+      if (e.key === "Escape" && document.activeElement === input){
+        input.value = "";
+        input.blur();
+        apply();
+      }
+    });
+
+    apply();
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run);
+  else run();
+})();
+
+
+/* =========================
+   Persistencia: última pestaña
+   ========================= */
+(function initLastTab(){
+  function run(){
+    let last = null;
+    try{ last = localStorage.getItem("mc_last_tab"); }catch(e){}
+    if (!last) last = "inicio";
+    // Si el tab existe, ábrelo
+    const tab = document.getElementById(last);
+    if (tab && typeof openTab === "function"){
+      openTab(null, last);
+    } else if (typeof openTab === "function"){
+      openTab(null, "inicio");
+    }
+    try{ setCurrentSection(last); }catch(e){}
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run);
+  else run();
+})();
+
+
+/* ==========================================================
+   STREAK SYSTEM + Sound + Achievement UI
+   ========================================================== */
+function todayStr(){
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,"0");
+  const day = String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+function ydayStr(){
+  const d = new Date();
+  d.setDate(d.getDate()-1);
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,"0");
+  const day = String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+function loadStreak(){
+  try{ return JSON.parse(localStorage.getItem("mc_streak") || "{}") || {}; }catch(e){ return {}; }
+}
+function saveStreak(st){ localStorage.setItem("mc_streak", JSON.stringify(st||{})); }
+function updateStreak(){
+  const st = loadStreak();
+  const t = todayStr();
+  const y = ydayStr();
+  if (!st.last){
+    st.last = t; st.count = 1;
+  } else if (st.last === t){
+    // nada
+  } else if (st.last === y){
+    st.last = t; st.count = (st.count||0) + 1;
+  } else {
+    st.last = t; st.count = 1;
+  }
+  saveStreak(st);
+  const el = document.getElementById("streakValue");
+  if (el) el.textContent = st.count || 1;
+  return st.count || 1;
+}
+
+function loadSound(){
+  try{ return localStorage.getItem("mc_sound") === "on"; }catch(e){ return false; }
+}
+function saveSound(on){
+  try{ localStorage.setItem("mc_sound", on ? "on" : "off"); }catch(e){}
+}
+function setSoundBtn(on){
+  const btn = document.getElementById("soundBtn");
+  if (!btn) return;
+  btn.title = "Sonido: " + (on ? "on" : "off");
+  btn.innerHTML = on ? '<i class="fas fa-volume-high"></i>' : '<i class="fas fa-volume-mute"></i>';
+}
+function playDing(){
+  if (!loadSound()) return;
+  // beep simple con WebAudio (ligero)
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = "sine";
+    o.frequency.value = 880;
+    g.gain.value = 0.0001;
+    o.connect(g); g.connect(ctx.destination);
+    o.start();
+    g.gain.exponentialRampToValueAtTime(0.08, ctx.currentTime + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18);
+    o.stop(ctx.currentTime + 0.20);
+    setTimeout(()=>ctx.close(), 250);
+  }catch(e){}
+}
+
+function showAchievementPopup(title, desc){
+  const box = document.getElementById("achPopup");
+  if (!box) return;
+  const el = document.createElement("div");
+  el.className = "ach-pop";
+  el.innerHTML = `<div class="row">
+      <span class="badge"><i class="fas fa-trophy"></i> Logro</span>
+      <div>
+        <div class="name">${title}</div>
+        <div class="desc">${desc || ""}</div>
+      </div>
+    </div>`;
+  box.appendChild(el);
+  playDing();
+  setTimeout(()=>{ try{ el.remove(); }catch(e){} }, 3200);
+}
+
+function renderAchievements(){
+  const grid = document.getElementById("achGrid");
+  if (!grid) return;
+  const st = loadAch();
+  const xp = loadXp();
+  grid.innerHTML = "";
+  ACHIEVEMENTS.forEach(a=>{
+    const unlocked = !!st[a.id] || xp >= a.xp;
+    const item = document.createElement("div");
+    item.className = "ach-item " + (unlocked ? "unlocked" : "locked");
+    item.innerHTML = `
+      <div class="left">
+        <div class="icon"><i class="fas ${unlocked ? "fa-trophy" : "fa-lock"}"></i></div>
+        <div class="meta">
+          <div class="title">${a.title}</div>
+          <div class="desc">${a.desc}</div>
+        </div>
+      </div>
+      <div class="badge">${unlocked ? "Desbloqueado" : (a.xp + " XP")}</div>
+    `;
+    grid.appendChild(item);
+  });
+}
+
+function openAchModal(){
+  const modal = document.getElementById("achModal");
+  if (!modal) return;
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden","false");
+  renderAchievements();
+}
+function closeAchModal(){
+  const modal = document.getElementById("achModal");
+  if (!modal) return;
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden","true");
+}
+(function initAchModal(){
+  function run(){
+    const btn = document.getElementById("achBtn");
+    if (btn) btn.addEventListener("click", openAchModal);
+    const modal = document.getElementById("achModal");
+    if (!modal) return;
+    modal.addEventListener("click", (e)=>{
+      const t = e.target;
+      if (t && t.dataset && t.dataset.close) closeAchModal();
+    });
+    document.addEventListener("keydown",(e)=>{
+      if (e.key === "Escape") closeAchModal();
+    });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run);
+  else run();
+})();
+(function initSoundToggle(){
+  function run(){
+    const btn = document.getElementById("soundBtn");
+    if (!btn) return;
+    let on = loadSound();
+    setSoundBtn(on);
+    btn.addEventListener("click", ()=>{
+      on = !on;
+      saveSound(on);
+      setSoundBtn(on);
+      if (typeof showToast === "function") showToast("Sonido: " + (on ? "on" : "off"));
+    });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run);
+  else run();
+})();
+document.addEventListener("DOMContentLoaded", updateStreak);
+
+
+/* ==========================================================
+   PARTICLE SYSTEM (ligero)
+   ========================================================== */
+(function initParticles(){
+  function run(){
+    const canvas = document.getElementById("particlesCanvas");
+    if (!canvas) return;
+
+    // respeta reduce-motion
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const ctx = canvas.getContext("2d");
+    let w=0,h=0,raf=0;
+    const count = Math.min(70, Math.floor((window.innerWidth*window.innerHeight)/22000));
+    const parts = [];
+
+    function resize(){
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+    }
+    function rnd(a,b){ return a + Math.random()*(b-a); }
+    function make(){
+      return {
+        x: rnd(0,w), y:rnd(0,h),
+        vx: rnd(-0.25,0.25), vy:rnd(-0.18,0.18),
+        r: rnd(1.0,2.4),
+        a: rnd(0.08,0.22)
+      };
+    }
+    function reset(){
+      parts.length=0;
+      for (let i=0;i<count;i++) parts.push(make());
+    }
+
+    function step(){
+      ctx.clearRect(0,0,w,h);
+      // dots
+      for (const p of parts){
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < -20) p.x = w+20;
+        if (p.x > w+20) p.x = -20;
+        if (p.y < -20) p.y = h+20;
+        if (p.y > h+20) p.y = -20;
+
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fillStyle = `rgba(255,215,0,${p.a})`;
+        ctx.fill();
+      }
+      // links
+      for (let i=0;i<parts.length;i++){
+        for (let j=i+1;j<parts.length;j++){
+          const a=parts[i], b=parts[j];
+          const dx=a.x-b.x, dy=a.y-b.y;
+          const d2=dx*dx+dy*dy;
+          if (d2 < 140*140){
+            const alpha = 0.10 * (1 - d2/(140*140));
+            ctx.strokeStyle = `rgba(0,255,200,${alpha})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(a.x,a.y);
+            ctx.lineTo(b.x,b.y);
+            ctx.stroke();
+          }
+        }
+      }
+      raf = requestAnimationFrame(step);
+    }
+
+    resize(); reset(); step();
+    window.addEventListener("resize", ()=>{ resize(); reset(); }, { passive:true });
+
+    // pausa si no visible
+    document.addEventListener("visibilitychange", ()=>{
+      if (document.hidden){
+        cancelAnimationFrame(raf);
+      }else{
+        step();
+      }
+    });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run);
+  else run();
+})();
+
+
+/* ==========================================================
+   PRACTICE MODE: generator + checker + export
+   ========================================================== */
+function loadPractice(){
+  try{ return JSON.parse(localStorage.getItem("mc_practice") || "[]") || []; }catch(e){ return []; }
+}
+function savePractice(arr){
+  localStorage.setItem("mc_practice", JSON.stringify(arr||[]));
+}
+function renderPracticeHistory(){
+  const box = document.getElementById("practiceHistory");
+  if (!box) return;
+  const arr = loadPractice();
+  if (!arr.length){
+    box.innerHTML = '<div class="soft">Aún no hay intentos.</div>';
+    return;
+  }
+  box.innerHTML = "";
+  arr.slice().reverse().slice(0,30).forEach(item=>{
+    const div = document.createElement("div");
+    div.className = "hist-item " + (item.correct ? "ok" : "bad");
+    div.innerHTML = `<div class="q">${item.topicLabel}: ${item.prompt}</div>
+      <div class="tag">${item.correct ? "✔" : "✘"} ${item.userAnswer}</div>`;
+    box.appendChild(div);
+  });
+}
+
+function downloadText(filename, text){
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 50);
+}
+
+let currentPractice = null;
+
+function normAnswer(s){
+  return (s||"").trim().toLowerCase().replace(/\s+/g,"");
+}
+
+function genPractice(topic){
+  // Returns {prompt, answer, hint, topicLabel}
+  function rint(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+  const mapLabel = {
+    cartesiano: "Producto cartesiano",
+    composicion: "Función compuesta",
+    inversa: "Función inversa",
+    funcion: "¿Es función?",
+    discreta: "Función discreta"
+  };
+  const topicLabel = mapLabel[topic] || topic;
+
+  if (topic === "cartesiano"){
+    const a = rint(2,7), b=rint(2,7);
+    return {
+      topicLabel,
+      prompt: `Si |A|=${a} y |B|=${b}, ¿cuántos pares tiene A×B?`,
+      answer: String(a*b),
+      hint: `Recuerda: |A×B| = |A|·|B| = ${a}·${b}.`
+    };
+  }
+
+  if (topic === "composicion"){
+    const a=rint(1,5), b=rint(-6,6);
+    const c=rint(1,5), d=rint(-6,6);
+    const k=rint(-3,3);
+    // f(x)=ax+b, g(x)=cx+d
+    const gx = c*k + d;
+    const fog = a*gx + b;
+    return {
+      topicLabel,
+      prompt: `Sea f(x)=${a}x${b>=0?"+":""}${b} y g(x)=${c}x${d>=0?"+":""}${d}. Calcula (f∘g)(${k}).`,
+      answer: String(fog),
+      hint: `Primero g(${k})=${gx}, luego f(g(${k}))=${a}·${gx}${b>=0?"+":""}${b}.`
+    };
+  }
+
+  if (topic === "inversa"){
+    const a=rint(1,6);
+    const b=rint(-6,6);
+    const y=rint(-5,5);
+    // f(x)=ax+b. Inverse: x=(y-b)/a
+    const x = (y - b)/a;
+    // if not integer, keep fraction
+    const ans = Number.isInteger(x) ? String(x) : `${y - b}/${a}`;
+    return {
+      topicLabel,
+      prompt: `Sea f(x)=${a}x${b>=0?"+":""}${b}. Calcula f^{-1}(${y}).`,
+      answer: ans,
+      hint: `Resuelve y = ${a}x${b>=0?"+":""}${b} ⇒ x = (y - ${b})/${a}.`
+    };
+  }
+
+  if (topic === "discreta"){
+    const n = rint(4,7);
+    const vals = Array.from({length:n}, ()=>rint(-3,9));
+    const idx = rint(1,n);
+    return {
+      topicLabel,
+      prompt: `Si f(1..${n}) = [${vals.join(", ")}], ¿cuál es f(${idx})?`,
+      answer: String(vals[idx-1]),
+      hint: `Es el valor en la posición ${idx} de la lista.`
+    };
+  }
+
+  // ¿Es función? con pares (x,y)
+  const A = [1,2,3,4];
+  const pairs = [];
+  const dup = Math.random() < 0.45; // a veces no es función
+  const usedX = {};
+  for (const x of A){
+    const y1 = rint(1,5);
+    pairs.push([x,y1]);
+    usedX[x] = y1;
+  }
+  if (dup){
+    const x = rint(1,4);
+    let y2 = usedX[x];
+    while (y2 === usedX[x]) y2 = rint(1,5);
+    pairs.push([x,y2]); // viola unicidad
+  }
+  const isFunc = !dup;
+  return {
+    topicLabel,
+    prompt: `Relación R = { ${pairs.map(p=>`(${p[0]},${p[1]})`).join(", ")} }. ¿Es función? Responde "si" o "no".`,
+    answer: isFunc ? "si" : "no",
+    hint: `Es función si cada x tiene UNA sola salida. Busca x repetida con distinto y.`
+  };
+}
+
+(function initPractice(){
+  function run(){
+    const topicSel = document.getElementById("practiceTopic");
+    const genBtn = document.getElementById("genPracticeBtn");
+    const chkBtn = document.getElementById("checkPracticeBtn");
+    const hintBtn = document.getElementById("hintPracticeBtn");
+    const ansIn = document.getElementById("practiceAnswer");
+    const qBox = document.getElementById("practiceQuestion");
+    const fb = document.getElementById("practiceFeedback");
+    const csvBtn = document.getElementById("exportCsvBtn");
+    const jsonBtn = document.getElementById("exportJsonBtn");
+    const clearBtn = document.getElementById("clearPracticeBtn");
+
+    if (!topicSel || !genBtn || !chkBtn || !ansIn || !qBox || !fb) return;
+
+    renderPracticeHistory();
+
+    function setFeedback(text, ok=null){
+      fb.textContent = text || "";
+      fb.classList.remove("ok","bad");
+      if (ok === true) fb.classList.add("ok");
+      if (ok === false) fb.classList.add("bad");
+    }
+
+    function generate(){
+      const t = topicSel.value;
+      currentPractice = genPractice(t);
+      qBox.innerHTML = currentPractice.prompt;
+      ansIn.value = "";
+      ansIn.focus();
+      setFeedback("Escribe tu respuesta y presiona Verificar.", null);
+    }
+
+    function check(){
+      if (!currentPractice){
+        setFeedback("Primero genera un ejercicio.", false);
+        return;
+      }
+      const ua = ansIn.value.trim();
+      if (!ua){
+        setFeedback("Escribe una respuesta.", false);
+        return;
+      }
+      const ok = normAnswer(ua) === normAnswer(currentPractice.answer);
+      const arr = loadPractice();
+      arr.push({
+        ts: new Date().toISOString(),
+        topicLabel: currentPractice.topicLabel,
+        prompt: currentPractice.prompt,
+        userAnswer: ua,
+        correct: ok,
+        correctAnswer: currentPractice.answer
+      });
+      savePractice(arr);
+      renderPracticeHistory();
+
+      if (ok){
+        setFeedback("Correcto ✅  +50 XP", true);
+        // XP solo en modo práctica/cálculo (no video/reseñas)
+        if (typeof awardXp === "function") awardXp(50, "Práctica");
+      }else{
+        setFeedback(`Incorrecto ❌  Respuesta: ${currentPractice.answer}`, false);
+      }
+    }
+
+    function hint(){
+      if (!currentPractice){
+        setFeedback("Primero genera un ejercicio.", false);
+        return;
+      }
+      setFeedback("Pista: " + currentPractice.hint, null);
+    }
+
+    genBtn.addEventListener("click", generate);
+    chkBtn.addEventListener("click", check);
+    hintBtn.addEventListener("click", hint);
+
+    ansIn.addEventListener("keydown",(e)=>{
+      if (e.key === "Enter") check();
+    });
+
+    if (csvBtn){
+      csvBtn.addEventListener("click", ()=>{
+        const arr = loadPractice();
+        const header = ["timestamp","tema","pregunta","respuesta_usuario","correcto","respuesta_correcta"];
+        const rows = arr.map(it=>[
+          it.ts, it.topicLabel, it.prompt.replaceAll("\n"," "),
+          it.userAnswer, it.correct ? "1" : "0", it.correctAnswer
+        ].map(v=>`"${String(v).replaceAll('"','""')}"`).join(","));
+        downloadText("mc_practice.csv", header.join(",") + "\n" + rows.join("\n"));
+      });
+    }
+    if (jsonBtn){
+      jsonBtn.addEventListener("click", ()=>{
+        const arr = loadPractice();
+        downloadText("mc_practice.json", JSON.stringify(arr, null, 2));
+      });
+    }
+    if (clearBtn){
+      clearBtn.addEventListener("click", ()=>{
+        savePractice([]);
+        renderPracticeHistory();
+        setFeedback("Historial borrado.", null);
+        if (typeof showToast === "function") showToast("Historial de práctica borrado");
+      });
+    }
+
+    // autogenera una al entrar por primera vez
+    if (!currentPractice) generate();
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run);
+  else run();
+})();
