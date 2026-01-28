@@ -137,7 +137,6 @@ h1, h2, h3, h4, h5, h6, .urban-title, .mega-title {
 .motto { font-size: 0.9rem; font-style: italic; color: #bbb !important; }
 
 .content-body { padding: 50px; }
-.tab-content { display: none; animation: slideIn 0.4s ease-out; }
 @keyframes slideIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
 /* --- BIENVENIDA --- */
@@ -634,12 +633,6 @@ pre code.hljs { padding: 25px !important; background: #050505 !important; border
     from{ opacity: 0; transform: translateY(8px); }
     to{ opacity: 1; transform: translateY(0); }
 }
-.tab-content{
-    animation: fadeInSlide .22s ease;
-}
-
-
-
 /* =========================================================
    VISUAL UPGRADE PACK (sin romper lógica base)
    ========================================================= */
@@ -726,16 +719,6 @@ input:focus, textarea:focus, select:focus{
 }
 
 /* Animación suave de tabs */
-.tab-content{
-    opacity: 0;
-    transform: translateY(10px);
-}
-.tab-content.active{
-    opacity: 1;
-    transform: translateY(0px);
-    transition: opacity .22s ease, transform .22s ease;
-}
-
 /* Sidebar: indicador activo más potente */
 .tab-link.active{
     box-shadow: 0 0 0 1px rgba(255,215,0,0.22), 0 0 18px rgba(255,215,0,0.10);
@@ -1389,80 +1372,60 @@ input, textarea, select{
 
 
 /* =========================
-   FIX: Tabs a prueba de fallos
+   Tabs: estable (sin pantallas invisibles)
    ========================= */
-.tab-content{
-    display: none !important;
-    opacity: 1 !important;           /* evita pantalla "transparente" */
-    transform: none !important;       /* sin desplazamiento oculto */
-}
-.tab-content.active{
-    display: block !important;
-    animation: fadeInSlide .22s ease;
-}
-/* Si algún tab queda visible por inline style, que se vea sí o sí */
-.tab-content[style*="display: block"]{
-    display: block !important;
-    opacity: 1 !important;
-    transform: none !important;
-}
+.tab-content{ display: none; }
+.tab-content.active{ display: block; animation: fadeInSlide .22s ease; }
 
 
 /* =========================
-   FIX: Sidebar estable (no se mueve)
+   Layout estable: sidebar fija + scroll solo en contenido
    ========================= */
-body{
-    overflow-x: hidden;
+html, body{
+    height: var(--app-height);
+    overflow: hidden;
+    width: 100%;
 }
+
+body{
+    margin: 0;
+}
+
 .sidebar{
-    position: fixed !important;
+    position: fixed;
     top: 0;
     left: 0;
     height: var(--app-height);
     width: var(--sidebar-width);
+    overflow: hidden;
+    z-index: 2000;
 }
-.main-content{
-    margin-left: 0 !important;
-    width: 100% !important;
-    min-height: var(--app-height);
-    padding-left: var(--sidebar-width);
-}
+
 .sidebar-scroll{
-    flex: 1;
-    min-height: 0;
+    height: calc(var(--app-height) - 140px);
     overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
 }
-@media (max-width: 980px){
-    .sidebar{
-        position: sticky !important;
-        width: 100% !important;
-        height: auto !important;
-    }
-    .main-content{
-        padding-left: 0 !important;
-    }
+
+.main-content{
+    height: var(--app-height);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-left: var(--sidebar-width);
+    width: 100%;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
 }
 
+.fx-overlay{
+    pointer-events: none;
+}
 
-/* =========================
-   FIX: Sidebar SIEMPRE visible (sin drawer)
-   ========================= */
-@media (max-width: 1200px){
-    .sidebar-toggle{ display: none !important; }
-    .sidebar-backdrop{ display: none !important; opacity: 0 !important; pointer-events: none !important; }
-    .sidebar{
-        transform: none !important;
-        width: var(--sidebar-width) !important;
-        position: fixed !important;
-        top: 0; left: 0;
-        height: var(--app-height) !important;
-    }
-    body.sidebar-open .sidebar{ transform: none !important; }
-    .main-content{
-        padding-left: var(--sidebar-width) !important;
-        margin-left: 0 !important;
-        width: 100% !important;
-    }
+/* Móvil: vuelve a layout vertical normal */
+@media (max-width: 980px){
+    html, body{ overflow: auto; height: auto; }
+    .sidebar{ position: sticky; width: 100%; height: auto; }
+    .sidebar-scroll{ height: auto; }
+    .main-content{ height: auto; overflow: visible; padding-left: 0; }
 }
