@@ -1909,23 +1909,20 @@ body{ margin:0; display:flex; align-items: stretch; }
 
 /* =========================
    TOPBAR SOLID v32
-   - header sólido (no transparente)
-   - incluye lema
+   - sin transparencia (no flota)
    ========================= */
 .top-header{
-  background: #050505 !important;
+  background: #070707 !important;
   backdrop-filter: none !important;
-  border-bottom: 1px solid rgba(255,255,255,0.10) !important;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.85) !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.55) !important;
 }
-.top-motto{
-  margin-top: 6px;
-  font-style: italic;
-  font-size: 0.92rem;
-  color: rgba(255,255,255,0.75);
-  letter-spacing: .2px;
-  max-width: 680px;
+.top-header::after{
+  content:"";
+  position:absolute;
+  left:0; right:0; bottom:-1px;
+  height:1px;
+  background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.16), rgba(255,255,255,0));
 }
-@media (max-width: 980px){
-  .top-motto{ font-size: 0.88rem; }
+.motto{
+  opacity: 0.92;
 }
