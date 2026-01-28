@@ -50,12 +50,6 @@ function openTab(evt, tabName) {
     var currentTab = document.getElementById(tabName);
     if (currentTab) {
         currentTab.style.display = "block";
-        // UX: al cambiar de pestaña, vuelve arriba del panel central
-        try{
-            const scroller = document.querySelector(".main-content");
-            if (scroller) scroller.scrollTo({ top: 0, behavior: "smooth" });
-        }catch(e){}
-
         
         // Animación: activar
         if (currentTab.classList) {
@@ -951,48 +945,31 @@ function initStarPicker() {
 
 
 /* ==========================================================
-   UI EXTRAS: progress bar + volver arriba (scroll en main-content)
+   UI EXTRAS: progress bar + volver arriba (no rompe lógica)
    ========================================================== */
 (function initUiExtras(){
     const bar = document.getElementById("scrollProgress");
     const topBtn = document.getElementById("toTopBtn");
-    const scroller = document.querySelector(".main-content") || window;
-
-    function getScrollInfo(){
-        if (scroller === window){
-            const doc = document.documentElement;
-            const scrollTop = doc.scrollTop || document.body.scrollTop || 0;
-            const scrollHeight = (doc.scrollHeight || 0) - (doc.clientHeight || 0);
-            return { scrollTop, scrollHeight };
-        } else {
-            return { scrollTop: scroller.scrollTop, scrollHeight: scroller.scrollHeight - scroller.clientHeight };
-        }
-    }
-
     function onScroll(){
-        const { scrollTop, scrollHeight } = getScrollInfo();
+        const doc = document.documentElement;
+        const scrollTop = doc.scrollTop || document.body.scrollTop || 0;
+        const scrollHeight = (doc.scrollHeight || 0) - (doc.clientHeight || 0);
         const pct = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
         if (bar) bar.style.width = Math.min(100, Math.max(0, pct)) + "%";
         if (topBtn) topBtn.style.display = scrollTop > 420 ? "flex" : "none";
     }
-
-    if (scroller !== window){
-        scroller.addEventListener("scroll", onScroll, { passive: true });
-    } else {
-        window.addEventListener("scroll", onScroll, { passive: true });
-    }
+    window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
 
     if (topBtn){
         topBtn.addEventListener("click", () => {
-            if (scroller === window){
-                window.scrollTo({ top: 0, behavior: "smooth" });
-            } else {
-                scroller.scrollTo({ top: 0, behavior: "smooth" });
-            }
+            window.scrollTo({ top: 0, behavior: "smooth" });
         });
     }
-})();/* ==========================================================
+})();
+
+
+/* ==========================================================
    FIX: estabilidad de altura en móvil (evita saltos de tamaño)
    ========================================================== */
 (function setAppHeight(){
@@ -1273,145 +1250,24 @@ function cleanupNonGameTabs(){
 document.addEventListener("DOMContentLoaded", cleanupNonGameTabs);
 
 
-/* ==========================================================
-   FIX: mostrar una pestaña por defecto (evita pantalla vacía)
-   ========================================================== */
-(function initDefaultTabVisible(){
-  function run(){
-    // intenta activar la pestaña que ya viene visible en HTML, si existe
-    const visible = document.querySelector('.tab-content[style*="display: block"]') || document.getElementById('inicio') || document.querySelector('.tab-content');
-    if (!visible) return;
-
-    // Si no está activa, actívala
-    visible.classList && visible.classList.add('active');
-
-    // Asegura color por sección y menú coherente
-    const id = visible.id || 'inicio';
-    try{
-      document.documentElement.style.setProperty('--gold-primary', (sectionColors && sectionColors[id]) ? sectionColors[id] : '#FFD700');
-    }catch(e){}
-  }
-  if (document.readyState === "loading"){
-    document.addEventListener("DOMContentLoaded", run);
-  } else {
-    run();
-  }
-})();
-
-
-/* ==========================================================
-   FIX DEFINITIVO: activar pestaña por defecto y mostrarla
-   ========================================================== */
-function activateDefaultTab(){
-  // prioridad: inicio
-  const inicio = document.getElementById("inicio");
-  if (inicio){
-    try{
-      // fuerza visibilidad usando la misma lógica del sistema
-      openTab(null, "inicio");
-      return;
-    }catch(e){
-      // fallback
-      inicio.style.display = "block";
-      inicio.classList && inicio.classList.add("active");
-      return;
+/* =========================
+   FIX: Iniciar en 'inicio' siempre
+   ========================= */
+(function initDefaultTab_v10base(){
+    function run(){
+        try{
+            if (typeof openTab === "function"){
+                openTab(null, "inicio");
+                return;
+            }
+        }catch(e){}
+        // fallback: muestra inicio si existe
+        const t = document.getElementById("inicio") || document.querySelector(".tab-content");
+        if (t){
+            t.style.display = "block";
+            t.classList && t.classList.add("active");
+        }
     }
-  }
-
-  // fallback: primera pestaña existente
-  const first = document.querySelector(".tab-content");
-  if (first){
-    first.style.display = "block";
-    first.classList && first.classList.add("active");
-  }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  try{ activateDefaultTab(); }catch(e){}
-});
-
-
-/* ==========================================================
-   FIX v16: asegurar tab inicial visible (sin depender de CSS)
-   ========================================================== */
-(function forceInitialTab(){
-  function run(){
-    try{
-      // Si ya hay un tab visible, actívalo por openTab para que tenga .active + color
-      const visible = document.querySelector('.tab-content[style*="display: block"]') || document.getElementById('inicio');
-      if (visible && visible.id){
-        openTab(null, visible.id); try{highlightTabLink(visible.id);}catch(e){}
-      }else{
-        openTab(null, 'inicio'); try{highlightTabLink('inicio');}catch(e){}
-      }
-    }catch(e){
-      // fallback: mostrar inicio a la fuerza
-      const t = document.getElementById('inicio');
-      if (t){ t.style.display='block'; t.classList.add('active'); }
-    }
-  }
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run);
-  else run();
-})();
-
-
-function highlightTabLink(tabName){
-  const links = document.getElementsByClassName("tab-link");
-  for (let i=0;i<links.length;i++){
-    const on = links[i].getAttribute("onclick") || "";
-    if (on.includes("'" + tabName + "'") || on.includes('"' + tabName + '"')){
-      links[i].className += " active";
-      const c = (typeof sectionColors !== "undefined" && sectionColors[tabName]) ? sectionColors[tabName] : '#FFD700';
-      links[i].style.borderColor = c;
-      links[i].style.color = c;
-      break;
-    }
-  }
-}
-
-
-/* ==========================================================
-   FIX v17: activar tab por defecto SIEMPRE
-   ========================================================== */
-(function initDefaultTabVisible_v17(){
-  function run(){
-    const active = document.querySelector(".tab-content.active") || document.getElementById("inicio") || document.querySelector(".tab-content");
-    const id = active && active.id ? active.id : "inicio";
-    try{
-      if (typeof openTab === "function") openTab(null, id);
-      else if (active){ active.style.display="block"; active.classList.add("active"); }
-    }catch(e){
-      const first = document.getElementById("inicio") || document.querySelector(".tab-content");
-      if (first){ first.style.display="block"; first.classList.add("active"); }
-    }
-  }
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run);
-  else run();
-})();
-
-/* ==========================================================
-   RELIABLE_INIT_v18: asegurar que SIEMPRE se vea contenido
-   ========================================================== */
-(function reliableInitV18(){
-  function activate(tabId){
-    try{
-      if (typeof openTab === "function") {
-        openTab(null, tabId);
-      } else {
-        // fallback: display toggling
-        const tabs = document.getElementsByClassName("tab-content");
-        for (let i=0;i<tabs.length;i++){ tabs[i].style.display="none"; tabs[i].classList.remove("active"); }
-        const t = document.getElementById(tabId) || document.getElementById("inicio") || tabs[0];
-        if (t){ t.style.display="block"; t.classList.add("active"); }
-      }
-    }catch(e){
-      const t = document.getElementById("inicio");
-      if (t){ t.style.display="block"; t.classList.add("active"); }
-    }
-  }
-  if (document.readyState === "loading"){
-    document.addEventListener("DOMContentLoaded", () => activate("inicio"));
-  } else {
-    activate("inicio");
-  }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run);
+    else run();
 })();
