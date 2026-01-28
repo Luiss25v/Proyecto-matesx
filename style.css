@@ -69,6 +69,8 @@ h1, h2, h3, h4, h5, h6, .urban-title, .mega-title {
     z-index: 1000;
     overflow: hidden;
     transition: border-color 0.3s ease;
+
+    overscroll-behavior: contain;
 }
 
 /* --- HEADER CON IMAGEN --- */
@@ -110,7 +112,9 @@ h1, h2, h3, h4, h5, h6, .urban-title, .mega-title {
     text-shadow: 0 0 10px var(--gold-primary);
 }
 .sidebar nav ul li a i { margin-right: 20px; width: 30px; text-align: center; }
-.sidebar-footer { padding: 30px; text-align: center; font-size: 0.9rem; color: #888; }
+.sidebar-footer { padding: 30px; text-align: center; font-size: 0.9rem; color: #888; 
+    flex: 0 0 auto;
+}
 
 .main-content{
     flex: 1 1 auto;
@@ -1139,7 +1143,15 @@ body{
 pre, code{ max-width: 100%; overflow-x: auto; }
 
 
-.sidebar-scroll{ overflow-y: auto; padding: 0 0 10px; }
+.sidebar-scroll{ overflow-y: auto; padding: 0 0 10px; 
+    flex: 1;
+
+    min-height: 0;
+
+    overscroll-behavior: contain;
+
+    -webkit-overflow-scrolling: touch;
+}
 
 
 /* HUD XP */
