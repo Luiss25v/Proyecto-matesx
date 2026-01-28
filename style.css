@@ -1407,3 +1407,11 @@ input, textarea, select{
 
 /* Evita saltos de ancho por scrollbar */
 .main-content{ scrollbar-gutter: stable; }
+
+
+
+/* =========================================================
+   FIX v16: tabs siempre visibles cuando corresponda
+   ========================================================= */
+.tab-content.active{ display: block !important; }
+.tab-content[style*="display: block"]{ opacity: 1 !important; transform: none !important; }
