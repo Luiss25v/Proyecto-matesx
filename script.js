@@ -1291,3 +1291,35 @@ document.addEventListener("DOMContentLoaded", cleanupNonGameTabs);
     run();
   }
 })();
+
+
+/* ==========================================================
+   FIX DEFINITIVO: activar pestaña por defecto y mostrarla
+   ========================================================== */
+function activateDefaultTab(){
+  // prioridad: inicio
+  const inicio = document.getElementById("inicio");
+  if (inicio){
+    try{
+      // fuerza visibilidad usando la misma lógica del sistema
+      openTab(null, "inicio");
+      return;
+    }catch(e){
+      // fallback
+      inicio.style.display = "block";
+      inicio.classList && inicio.classList.add("active");
+      return;
+    }
+  }
+
+  // fallback: primera pestaña existente
+  const first = document.querySelector(".tab-content");
+  if (first){
+    first.style.display = "block";
+    first.classList && first.classList.add("active");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  try{ activateDefaultTab(); }catch(e){}
+});
