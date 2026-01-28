@@ -20,7 +20,7 @@ body {
     background-color: var(--bg-obsidian); 
     display: flex; color: var(--text-white); 
     font-family: var(--font-body); 
-    line- 
+    line-height: 1.4;
     overflow-x: hidden; 
     transition: background-color 0.4s ease, color 0.4s ease;
 
@@ -1786,4 +1786,56 @@ width: 100%;
 
 @media (max-width: 980px){
   .main-content{ margin-left: 0 !important; width: 100% !important; }
+}
+
+
+/* =========================
+   LAYOUT CLEAN OVERRIDES v24
+   - elimina hueco lateral
+   - sidebar estable
+   - scroll solo en main-content
+   ========================= */
+html, body{
+  height: var(--app-height) !important;
+  overflow: hidden !important;
+}
+body{
+  display: flex !important;
+  align-items: stretch !important;
+}
+
+/* Sidebar como columna fija del flex (sin position fixed) */
+.sidebar{
+  position: relative !important;
+  flex: 0 0 var(--sidebar-width) !important;
+  width: var(--sidebar-width) !important;
+  height: var(--app-height) !important;
+}
+
+/* La lista del menú scrollea dentro de la sidebar */
+.sidebar-scroll{
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Contenido: ocupa el resto, sin margin/padding extra */
+.main-content{
+  flex: 1 1 auto !important;
+  height: var(--app-height) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  width: auto !important;
+}
+
+/* Móvil: vuelve a flujo normal */
+@media (max-width: 980px){
+  html, body{ height: auto !important; overflow: auto !important; }
+  body{ display: block !important; }
+  .sidebar{ width: 100% !important; height: auto !important; position: sticky !important; top: 0; }
+  .main-content{ height: auto !important; overflow: visible !important; }
 }
