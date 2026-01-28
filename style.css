@@ -1429,3 +1429,336 @@ body{
     .sidebar-scroll{ height: auto; }
     .main-content{ height: auto; overflow: visible; padding-left: 0; }
 }
+
+
+/* =========================
+   Sidebar search
+   ========================= */
+.sidebar-search{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin: 12px 14px 6px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(10px);
+}
+.sidebar-search i{
+    color: var(--gold-primary);
+    opacity: .9;
+}
+.sidebar-search input{
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-white);
+    font-size: 0.95rem;
+}
+.sidebar-search input::placeholder{
+    color: rgba(255,255,255,0.45);
+}
+
+/* =========================
+   Current section pill
+   ========================= */
+.section-pill{
+    position: absolute;
+    left: calc(var(--sidebar-width) + 18px);
+    top: 16px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(12px);
+    font-family: var(--font-headers);
+    letter-spacing: 1px;
+    font-size: 0.80rem;
+    color: rgba(255,255,255,0.92);
+}
+@media (max-width: 980px){
+    .section-pill{
+        position: static;
+        margin: 10px 12px 0;
+        width: fit-content;
+    }
+}
+
+/* =========================
+   Skip link
+   ========================= */
+.skip-link{
+    position:absolute;
+    left:-999px;
+    top:10px;
+    z-index: 9999;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.16);
+    background: rgba(0,0,0,0.75);
+    color: white;
+}
+.skip-link:focus{
+    left: 12px;
+}
+
+/* =========================
+   Nav: indicador activo más claro
+   ========================= */
+.tab-link{
+    position: relative;
+}
+.tab-link.active::after{
+    content:"";
+    position:absolute;
+    left: 0;
+    top: 10px;
+    bottom: 10px;
+    width: 4px;
+    border-radius: 999px;
+    background: currentColor;
+    box-shadow: 0 0 14px rgba(255,255,255,0.15);
+}
+
+
+/* =========================
+   Particles Canvas
+   ========================= */
+#particlesCanvas{
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.55;
+    mix-blend-mode: screen;
+}
+@media (prefers-reduced-motion: reduce){
+    #particlesCanvas{ display:none; }
+}
+
+/* Make sure main layers are above particles */
+.sidebar, .top-header, .main-content, .scroll-progress, #toTopBtn{
+    position: relative;
+    z-index: 2;
+}
+.fx-overlay{ z-index: 1; }
+
+/* =========================
+   HUD buttons + streak
+   ========================= */
+.xp-row{
+    display:flex;
+    align-items:center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 8px;
+}
+.streak{
+    display:inline-flex;
+    align-items:center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(0,0,0,0.25);
+    font-size: 0.80rem;
+}
+.streak i{ color: var(--gold-primary); }
+
+.hud-btn{
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(0,0,0,0.30);
+    color: rgba(255,255,255,0.92);
+    cursor: pointer;
+}
+.hud-btn:hover{ transform: translateY(-1px); }
+.hud-btn:active{ transform: translateY(0); }
+
+/* =========================
+   Modal (Logros)
+   ========================= */
+.modal{
+    position: fixed;
+    inset: 0;
+    display: none;
+    z-index: 5000;
+}
+.modal.open{ display:block; }
+.modal-backdrop{
+    position:absolute;
+    inset:0;
+    background: rgba(0,0,0,0.68);
+    backdrop-filter: blur(6px);
+}
+.modal-card{
+    position: relative;
+    max-width: 760px;
+    margin: 7vh auto;
+    background: rgba(0,0,0,0.72);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 18px;
+    box-shadow: 0 40px 120px rgba(0,0,0,0.65);
+    overflow: hidden;
+}
+.modal-head{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.10);
+}
+.modal-head h3{
+    margin: 0;
+    font-family: var(--font-headers);
+    letter-spacing: 1px;
+}
+.modal-close{
+    width: 40px; height: 40px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(0,0,0,0.30);
+    color: rgba(255,255,255,0.92);
+    cursor:pointer;
+}
+.modal-body{ padding: 14px 16px 18px; }
+.ach-grid{
+    display:grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 12px;
+}
+@media (max-width: 720px){
+    .modal-card{ margin: 12px; }
+    .ach-grid{ grid-template-columns: 1fr; }
+}
+.ach-item{
+    padding: 12px 12px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(0,0,0,0.35);
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.ach-item .left{
+    display:flex; gap: 10px; align-items:center; min-width:0;
+}
+.ach-item .icon{
+    width: 40px; height: 40px;
+    border-radius: 14px;
+    display:flex; align-items:center; justify-content:center;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.06);
+}
+.ach-item .meta{ min-width:0; }
+.ach-item .title{ font-weight: 800; letter-spacing: .4px; }
+.ach-item .desc{ font-size: .85rem; color: rgba(255,255,255,0.75); }
+.ach-item.locked{ opacity: .65; }
+.ach-item.unlocked{
+    border-color: rgba(0,255,200,0.30);
+    background: rgba(0,255,200,0.06);
+}
+
+/* =========================
+   Achievement popup
+   ========================= */
+.ach-popup{
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 6000;
+    display:flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.ach-pop{
+    width: 320px;
+    padding: 12px 12px;
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 30px 90px rgba(0,0,0,0.65);
+    animation: popIn .22s ease;
+}
+@keyframes popIn{
+    from{ transform: translateY(10px); opacity:0; }
+    to{ transform: translateY(0); opacity:1; }
+}
+.ach-pop .row{ display:flex; align-items:center; gap:10px; }
+.ach-pop .badge{
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.06);
+}
+.ach-pop .name{ font-weight: 900; letter-spacing: .4px; }
+
+/* =========================
+   Practice module
+   ========================= */
+.soft{ color: rgba(255,255,255,0.75); margin: 10px 0 14px; }
+.label{ display:block; margin-top: 10px; margin-bottom: 6px; color: rgba(255,255,255,0.75); font-size: .9rem; }
+.question-box{
+    margin-top: 10px;
+    padding: 12px 12px;
+    border-radius: 16px;
+    border: 1px dashed rgba(255,255,255,0.20);
+    background: rgba(0,0,0,0.25);
+    line-height: 1.45;
+}
+.feedback{
+    margin-top: 10px;
+    min-height: 48px;
+    padding: 10px 12px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(0,0,0,0.25);
+}
+.feedback.ok{
+    border-color: rgba(0,255,200,0.30);
+    background: rgba(0,255,200,0.06);
+}
+.feedback.bad{
+    border-color: rgba(255,80,80,0.30);
+    background: rgba(255,80,80,0.06);
+}
+.row{ display:flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.action-btn.danger{
+    border-color: rgba(255,80,80,0.35);
+    color: rgba(255,190,190,0.95);
+}
+.history{
+    max-height: 220px;
+    overflow:auto;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(0,0,0,0.20);
+    padding: 10px 10px;
+}
+.hist-item{
+    display:flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(0,0,0,0.22);
+    margin-bottom: 8px;
+}
+.hist-item .q{ flex: 1; color: rgba(255,255,255,0.85); }
+.hist-item .tag{
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.06);
+    font-size: .78rem;
+    white-space: nowrap;
+}
+.hist-item.ok .tag{ border-color: rgba(0,255,200,0.30); background: rgba(0,255,200,0.08); }
+.hist-item.bad .tag{ border-color: rgba(255,80,80,0.30); background: rgba(255,80,80,0.08); }
