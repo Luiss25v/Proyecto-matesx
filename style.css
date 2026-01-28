@@ -1452,3 +1452,43 @@ input, textarea, select{
   opacity: 1 !important;
   transform: translateY(0) !important;
 }
+
+
+/* =========================================================
+   RELIABLE TAB VISIBILITY v18
+   - No opacity tricks. Only display toggling.
+   ========================================================= */
+.tab-content{
+  display: none;
+  opacity: 1 !important;
+  transform: none !important;
+}
+.tab-content.active{
+  display: block;
+}
+#inicio{
+  display: block;
+}
+
+
+/* =========================================================
+   RELIABLE LAYOUT v18
+   - Sidebar fixed; page scrolls normally.
+   ========================================================= */
+html, body{
+  height: auto !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+.main-content{
+  height: auto !important;
+  overflow: visible !important;
+  padding-left: 0 !important;
+  margin-left: var(--sidebar-width);
+  width: calc(100% - var(--sidebar-width));
+  min-height: 100vh;
+}
+@media (max-width: 980px){
+  .sidebar{ position: sticky !important; width: 100% !important; height: auto !important; }
+  .main-content{ margin-left: 0 !important; width: 100% !important; }
+}
