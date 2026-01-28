@@ -68,6 +68,14 @@ document.documentElement.style.setProperty('--gold-primary', newColor);
 
 
     try{ cleanupNonGameTabs(); }catch(e){}
+
+    // UX: al cambiar de pestaña, vuelve arriba del panel central
+    try{
+        const scroller = document.querySelector(".main-content");
+        if (scroller) scroller.scrollTo({ top: 0, behavior: "smooth" });
+    }catch(e){}
+    // Si no hubo evento (carga inicial), activa el link correspondiente
+    if (!evt) { try{ activateLinkForTab(tabName); }catch(e){} }
 }
 
 // --- CALCULADORAS ---
@@ -1251,23 +1259,36 @@ document.addEventListener("DOMContentLoaded", cleanupNonGameTabs);
 
 
 /* =========================
-   FIX: Iniciar en 'inicio' siempre
+   FIX: pestaña por defecto (siempre visible)
    ========================= */
-(function initDefaultTab_v10base(){
-    function run(){
-        try{
-            if (typeof openTab === "function"){
-                openTab(null, "inicio");
-                return;
-            }
-        }catch(e){}
-        // fallback: muestra inicio si existe
-        const t = document.getElementById("inicio") || document.querySelector(".tab-content");
-        if (t){
-            t.style.display = "block";
-            t.classList && t.classList.add("active");
-        }
+(function initDefaultTab_final(){
+  function run(){
+    try{
+      const activeTab = document.querySelector(".tab-content.active") || document.getElementById("inicio") || document.querySelector(".tab-content");
+      const id = activeTab && activeTab.id ? activeTab.id : "inicio";
+      // Mostrar siempre la pestaña inicial con openTab para sincronizar estilos/colores
+      if (typeof openTab === "function"){
+        openTab(null, id);
+      } else if (activeTab){
+        activeTab.style.display = "block";
+      }
+    }catch(e){
+      const t = document.getElementById("inicio");
+      if (t){ t.style.display="block"; }
     }
-    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run);
-    else run();
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run);
+  else run();
 })();
+
+function activateLinkForTab(tabName){
+  const links = document.querySelectorAll('.tab-link');
+  links.forEach(a=>{
+    if ((a.getAttribute("onclick")||"").includes("'" + tabName + "'")){
+      a.classList.add("active");
+      const newColor = sectionColors[tabName] || '#FFD700';
+      a.style.borderColor = newColor;
+      a.style.color = newColor;
+    }
+  });
+}
