@@ -945,31 +945,48 @@ function initStarPicker() {
 
 
 /* ==========================================================
-   UI EXTRAS: progress bar + volver arriba (no rompe lógica)
+   UI EXTRAS: progress bar + volver arriba (scroll en main-content)
    ========================================================== */
 (function initUiExtras(){
     const bar = document.getElementById("scrollProgress");
     const topBtn = document.getElementById("toTopBtn");
+    const scroller = document.querySelector(".main-content") || window;
+
+    function getScrollInfo(){
+        if (scroller === window){
+            const doc = document.documentElement;
+            const scrollTop = doc.scrollTop || document.body.scrollTop || 0;
+            const scrollHeight = (doc.scrollHeight || 0) - (doc.clientHeight || 0);
+            return { scrollTop, scrollHeight };
+        } else {
+            return { scrollTop: scroller.scrollTop, scrollHeight: scroller.scrollHeight - scroller.clientHeight };
+        }
+    }
+
     function onScroll(){
-        const doc = document.documentElement;
-        const scrollTop = doc.scrollTop || document.body.scrollTop || 0;
-        const scrollHeight = (doc.scrollHeight || 0) - (doc.clientHeight || 0);
+        const { scrollTop, scrollHeight } = getScrollInfo();
         const pct = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
         if (bar) bar.style.width = Math.min(100, Math.max(0, pct)) + "%";
         if (topBtn) topBtn.style.display = scrollTop > 420 ? "flex" : "none";
     }
-    window.addEventListener("scroll", onScroll, { passive: true });
+
+    if (scroller !== window){
+        scroller.addEventListener("scroll", onScroll, { passive: true });
+    } else {
+        window.addEventListener("scroll", onScroll, { passive: true });
+    }
     onScroll();
 
     if (topBtn){
         topBtn.addEventListener("click", () => {
-            window.scrollTo({ top: 0, behavior: "smooth" });
+            if (scroller === window){
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            } else {
+                scroller.scrollTo({ top: 0, behavior: "smooth" });
+            }
         });
     }
-})();
-
-
-/* ==========================================================
+})();/* ==========================================================
    FIX: estabilidad de altura en móvil (evita saltos de tamaño)
    ========================================================== */
 (function setAppHeight(){
