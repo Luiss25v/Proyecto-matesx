@@ -1946,3 +1946,232 @@ function genPractice(topic){
     }
   });
 })();
+
+
+/* ==========================================================
+   VIDEO TAB REWORK (sin YouTube): Accordion + Quiz + MATLAB templates
+   ========================================================== */
+(function initVideoTraining(){
+  function ready(fn){
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn);
+    else fn();
+  }
+
+  const TEMPLATES = {
+    cart: `% Producto cartesiano A x B
+A = [1 2 3];
+B = [4 5];
+[GridA, GridB] = ndgrid(A,B);
+P = [GridA(:), GridB(:)];
+disp(P);`,
+    isfun: `% Verificar si una relación es función (pares)
+% pares = [x y; x y; ...]
+pares = [1 2; 2 2; 3 4];
+x = pares(:,1); y = pares(:,2);
+isFunc = numel(unique(x)) == numel(x); % cada x aparece una sola vez
+disp(isFunc);`,
+    inv: `% Inversa a partir de pares (si es biyectiva)
+pares = [1 2; 2 3; 3 4];
+invPares = [pares(:,2), pares(:,1)];
+disp(invPares);`,
+    comp: `% Composición (g∘f) usando pares
+% f: x->y  y g: y->z
+f = [1 2; 2 3; 3 4];
+g = [2 5; 3 6; 4 7];
+% construir mapas
+xf = f(:,1); yf = f(:,2);
+yg = g(:,1); zg = g(:,2);
+z = zeros(size(xf));
+for i=1:numel(xf)
+    k = find(yg == yf(i), 1);
+    if isempty(k), z(i) = NaN; else, z(i) = zg(k); end
+end
+comp = [xf, z];
+disp(comp);`,
+    disc: `% Función discreta: puntos (x, f(x))
+x = -5:5;
+fx = x.^2 - 2*x + 1;
+stem(x, fx, "filled"); grid on;
+xlabel("x"); ylabel("f(x)"); title("Función discreta");`
+  };
+
+  function setTemplate(val){
+    const codeEl = document.getElementById("matlabTemplateCode");
+    if (!codeEl) return;
+    const txt = TEMPLATES[val] || "% Selecciona un tema arriba para generar el código MATLAB.";
+    codeEl.textContent = txt;
+    try{
+      if (window.hljs && typeof window.hljs.highlightElement === "function"){
+        window.hljs.highlightElement(codeEl);
+      }
+    }catch(e){}
+  }
+
+  function copyText(text){
+    if (!text) return;
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(()=>{ try{ showToast("Copiado al portapapeles"); }catch(e){}; try{ playDing(); }catch(e){}; });
+      return;
+    }
+    // fallback
+    const ta = document.createElement("textarea");
+    ta.value = text; document.body.appendChild(ta);
+    ta.select(); document.execCommand("copy");
+    document.body.removeChild(ta);
+    try{ showToast("Copiado al portapapeles"); }catch(e){}
+    try{ playDing(); }catch(e){}
+  }
+
+  function downloadText(filename, text){
+    const blob = new Blob([text], {type:"text/plain;charset=utf-8"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename || "codigo.m";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 0);
+    try{ showToast("Descarga iniciada"); }catch(e){}
+  }
+
+  // Quiz pool
+  const QUIZ = [
+    {
+      q: "¿Cuál condición SIEMPRE debe cumplir una función?",
+      opts: ["Cada x del dominio tiene exactamente una salida", "Cada y del codominio recibe exactamente un x", "No puede repetirse ningún y", "Debe ser biyectiva"],
+      a: 0,
+      exp: "Definición: a cada entrada x le corresponde una y única. No se exige biyectividad."
+    },
+    {
+      q: "Si (1→2) y (1→3) están en la relación, entonces…",
+      opts: ["Sí es función", "No es función", "Es inyectiva", "Es sobreyectiva"],
+      a: 1,
+      exp: "El mismo x=1 tendría dos salidas distintas (2 y 3), viola la definición."
+    },
+    {
+      q: "¿Cuándo existe f⁻¹ (inversa) como función?",
+      opts: ["Cuando f es sobreyectiva", "Cuando f es inyectiva", "Cuando f es biyectiva", "Cuando f es constante"],
+      a: 2,
+      exp: "Para que la inversa sea función, f debe ser biyectiva."
+    },
+    {
+      q: "La composición (g∘f)(x) significa…",
+      opts: ["f(g(x))", "g(f(x))", "f(x)+g(x)", "g(x)+f(x)"],
+      a: 1,
+      exp: "Primero aplicas f y luego g: g(f(x))."
+    },
+    {
+      q: "Si dos x distintos van al mismo y, la función…",
+      opts: ["Deja de ser función", "Sigue siendo función", "Es necesariamente biyectiva", "Es necesariamente sobreyectiva"],
+      a: 1,
+      exp: "Eso es permitido. Lo que NO se permite es un mismo x con dos salidas."
+    }
+  ];
+
+  function init(){
+    // Accordion
+    const accBtns = document.querySelectorAll(".acc-btn[data-acc]");
+    accBtns.forEach(btn=>{
+      btn.setAttribute("aria-expanded","false");
+      btn.addEventListener("click", ()=>{
+        const key = btn.getAttribute("data-acc");
+        const panel = document.querySelector(`.acc-panel[data-acc-panel="${key}"]`);
+        const open = panel && panel.classList.contains("open");
+        // close all
+        accBtns.forEach(b=>{
+          b.setAttribute("aria-expanded","false");
+          const k = b.getAttribute("data-acc");
+          const p = document.querySelector(`.acc-panel[data-acc-panel="${k}"]`);
+          if (p) p.classList.remove("open");
+        });
+        if (panel && !open){
+          panel.classList.add("open");
+          btn.setAttribute("aria-expanded","true");
+          try{ if (window.MathJax && window.MathJax.typeset) window.MathJax.typeset(); }catch(e){}
+        }
+      });
+    });
+
+    // Templates
+    const sel = document.getElementById("matlabTemplateSelect");
+    const copyBtn = document.getElementById("matlabTemplateCopy");
+    const dlBtn = document.getElementById("matlabTemplateDownload");
+    if (sel){
+      setTemplate(sel.value);
+      sel.addEventListener("change", ()=> setTemplate(sel.value));
+    }
+    if (copyBtn){
+      copyBtn.addEventListener("click", ()=>{
+        const codeEl = document.getElementById("matlabTemplateCode");
+        copyText(codeEl ? codeEl.textContent : "");
+      });
+    }
+    if (dlBtn){
+      dlBtn.addEventListener("click", ()=>{
+        const codeEl = document.getElementById("matlabTemplateCode");
+        const sel = document.getElementById("matlabTemplateSelect");
+        const name = (sel ? sel.value : "codigo") + ".m";
+        downloadText(name, codeEl ? codeEl.textContent : "");
+      });
+    }
+
+    // Quiz
+    const qEl = document.getElementById("quizQ");
+    const optsEl = document.getElementById("quizOpts");
+    const expEl = document.getElementById("quizExplain");
+    const scoreEl = document.getElementById("quizScore");
+    let current = null;
+    let score = 0;
+
+    function renderQuestion(){
+      if (!qEl || !optsEl) return;
+      current = QUIZ[Math.floor(Math.random()*QUIZ.length)];
+      qEl.textContent = current.q;
+      optsEl.innerHTML = "";
+      if (expEl){ expEl.style.display="none"; expEl.textContent=""; }
+      current.opts.forEach((t, idx)=>{
+        const b = document.createElement("button");
+        b.className = "quiz-opt";
+        b.type = "button";
+        b.textContent = t;
+        b.addEventListener("click", ()=> choose(idx, b));
+        optsEl.appendChild(b);
+      });
+    }
+
+    function choose(idx, btn){
+      if (!current || !optsEl) return;
+      // lock
+      [...optsEl.querySelectorAll(".quiz-opt")].forEach(b=> b.disabled = true);
+      const correct = idx === current.a;
+      if (correct){
+        btn.classList.add("correct");
+        score += 1;
+        if (scoreEl) scoreEl.textContent = String(score);
+        try{ awardXp(30, "Quiz correcto"); }catch(e){}
+        try{ playDing(); }catch(e){}
+        try{ showToast("Correcto ✅ +30 XP"); }catch(e){}
+      } else {
+        btn.classList.add("wrong");
+        const all = [...optsEl.querySelectorAll(".quiz-opt")];
+        if (all[current.a]) all[current.a].classList.add("correct");
+        try{ showToast("Incorrecto ❌"); }catch(e){}
+      }
+      if (expEl){
+        expEl.style.display = "block";
+        expEl.textContent = current.exp;
+      }
+    }
+
+    const newBtn = document.getElementById("newQuizQBtn");
+    const revBtn = document.getElementById("revealQuizBtn");
+    if (newBtn) newBtn.addEventListener("click", renderQuestion);
+    if (revBtn) revBtn.addEventListener("click", ()=>{
+      if (!expEl) return;
+      expEl.style.display = (expEl.style.display === "none") ? "block" : "none";
+      if (expEl.style.display === "block" && current) expEl.textContent = current.exp;
+    });
+  }
+
+  ready(init);
+})();
+
