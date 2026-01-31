@@ -73,7 +73,7 @@
 
         </div>
         <div class="sidebar-footer">
-            <p>Samuel Robayo | EPN 2026</p>
+            <p>GRUPO 5 MC | EPN</p>
         </div>
     </aside>
 
@@ -568,28 +568,90 @@ C (ej: a->X,b->Y,c->Z)">
             <!-- ============================= -->
             <div id="video" class="tab-content" style="display:none;">
                 <div class="topic-header">
-                    <h2>VIDEO
-<div class="video-wrap">
-  <iframe src="https://www.youtube.com/embed/LVeErySORcg" title="YouTube video" frameborder="0"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-    allowfullscreen></iframe>
-</div>
-</h2>
+                    <h2>ENTRENAMIENTO INTERACTIVO</h2>
                     <span class="badge">BONUS</span>
                 </div>
 
                 <div class="card">
-                    <h1 class="urban-title">Explicación rápida</h1>
-                    <div class="video-wrap">
-                        <iframe class="video-iframe" src="https://www.youtube.com/embed/6gFQZl2xg5Y" title="Funciones" frameborder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    <h3 class="neon-subtitle"><i class="fas fa-bolt"></i> Guía rápida (sin video)</h3>
+                    <p class="muted">Este apartado reemplaza el video de YouTube con una guía interactiva y un quiz para practicar funciones.</p>
+
+                    <div class="accordion" id="videoAccordion">
+                        <button class="acc-btn" type="button" data-acc="a1">
+                            <span>¿Qué es una función?</span><i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="acc-panel" data-acc-panel="a1">
+                            <p>Una función asigna a <b>cada</b> elemento del dominio exactamente <b>un</b> elemento del codominio.</p>
+                            <ul class="bullet">
+                                <li>No puede haber un mismo <b>x</b> con dos salidas distintas.</li>
+                                <li>Puede haber dos <b>x</b> distintos con la <b>misma</b> salida.</li>
+                            </ul>
+                        </div>
+
+                        <button class="acc-btn" type="button" data-acc="a2">
+                            <span>Dominio, codominio y rango</span><i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="acc-panel" data-acc-panel="a2">
+                            <ul class="bullet">
+                                <li><b>Dominio</b>: entradas posibles.</li>
+                                <li><b>Codominio</b>: salidas “permitidas”.</li>
+                                <li><b>Rango</b>: salidas que realmente aparecen.</li>
+                            </ul>
+                        </div>
+
+                        <button class="acc-btn" type="button" data-acc="a3">
+                            <span>Inversa y compuesta</span><i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="acc-panel" data-acc-panel="a3">
+                            <p>La inversa existe si la función es biyectiva (inyectiva y sobreyectiva). La compuesta combina dos funciones: \( (g\circ f)(x)=g(f(x)) \).</p>
+                        </div>
                     </div>
                 </div>
+
+                <div class="grid-2">
+                    <div class="card">
+                        <h3 class="neon-subtitle"><i class="fas fa-gamepad"></i> Quiz relámpago</h3>
+                        <p class="muted">Genera preguntas aleatorias y suma XP al responder correctamente.</p>
+
+                        <div class="quiz" id="quickQuiz">
+                            <div class="quiz-head">
+                                <span class="quiz-tag">PREGUNTA</span>
+                                <span class="quiz-score">Puntos: <b id="quizScore">0</b></span>
+                            </div>
+                            <div class="quiz-q" id="quizQ">Presiona “Nueva pregunta”.</div>
+                            <div class="quiz-opts" id="quizOpts"></div>
+
+                            <div class="quiz-actions">
+                                <button class="action-btn primary" type="button" id="newQuizQBtn"><i class="fas fa-dice"></i> Nueva pregunta</button>
+                                <button class="action-btn" type="button" id="revealQuizBtn"><i class="fas fa-eye"></i> Ver explicación</button>
+                            </div>
+                            <div class="quiz-explain" id="quizExplain" style="display:none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="neon-subtitle"><i class="fas fa-code"></i> MATLAB: Plantillas rápidas</h3>
+                        <p class="muted">Selecciona un tema y genera un snippet listo para copiar.</p>
+
+                        <div class="row">
+                            <select id="matlabTemplateSelect" class="input">
+                                <option value="cart">Producto cartesiano</option>
+                                <option value="isfun">Verificar si es función</option>
+                                <option value="inv">Inversa (tabla/pares)</option>
+                                <option value="comp">Composición (tabla/pares)</option>
+                                <option value="disc">Función discreta (stem)</option>
+                            </select>
+                            <button class="action-btn" type="button" id="matlabTemplateCopy"><i class="fas fa-copy"></i> Copiar</button>
+                            <button class="action-btn" type="button" id="matlabTemplateDownload"><i class="fas fa-download"></i> .m</button>
+                        </div>
+
+                        <pre class="code-block"><code class="language-matlab" id="matlabTemplateCode">% Selecciona un tema arriba para generar el código MATLAB.</code></pre>
+                        <p class="tiny muted">Tip: también puedes usar “Ver MATLAB” en cada sección para ver el código relacionado.</p>
+                    </div>
+                </div>
+
             </div>
 
-            <!-- ============================= -->
-            <!-- SECCIÓN: RESEÑAS -->
-            <!-- ============================= -->
             <div id="resenas" class="tab-content" style="display:none;">
                 <div class="topic-header">
                     <h2>RESEÑAS</h2>
