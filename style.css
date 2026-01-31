@@ -1926,3 +1926,182 @@ body{ margin:0; display:flex; align-items: stretch; }
 .motto{
   opacity: 0.92;
 }
+
+
+/* ==========================================================
+   FINAL POLISH OVERRIDES (layout estable + visual overhaul)
+   - Sidebar fija (no sticky)
+   - Scroll SOLO en .main-content
+   - Header superior sticky, sólido, no transparente
+   - Mejoras visuales notorias (cards, botones, scrollbars)
+   ========================================================== */
+
+:root{
+  --accent: var(--gold-primary);
+  --accent2: #00ffd1;
+  --shadow-xl: 0 24px 80px rgba(0,0,0,.55);
+  --radius-xl: 22px;
+  --radius-lg: 18px;
+  --radius-md: 14px;
+  --ring: 0 0 0 3px rgba(255,215,0,.18);
+}
+
+/* Layout base */
+html, body{
+  height: var(--app-height) !important;
+  overflow: hidden !important;
+}
+
+body{
+  display:block !important;
+  margin:0 !important;
+  background:
+    radial-gradient(1200px 600px at 70% -10%, rgba(0,255,209,.10), transparent 60%),
+    radial-gradient(900px 520px at 10% 30%, rgba(255,215,0,.10), transparent 58%),
+    linear-gradient(180deg, #050505, #0a0a0a 40%, #050505);
+}
+
+.sidebar{
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
+  width: var(--sidebar-width) !important;
+  height: var(--app-height) !important;
+  background: rgba(5,5,5,.92) !important;
+  border-right: 2px solid rgba(255,215,0,.35) !important;
+  box-shadow: 16px 0 80px rgba(0,0,0,.45);
+}
+
+.sidebar-scroll{
+  height: calc(var(--app-height) - 170px) !important;
+  overflow-y: auto !important;
+  padding-bottom: 10px !important;
+}
+
+.main-content{
+  position: fixed !important;
+  top: 0 !important;
+  left: var(--sidebar-width) !important;
+  right: 0 !important;
+  bottom: 0 !important;
+
+  margin: 0 !important;
+  width: auto !important;
+
+  height: var(--app-height) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+
+  scrollbar-gutter: stable both-edges;
+}
+
+/* Header superior: estable y sólido */
+.top-header{
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 2600 !important;
+
+  background: #050505 !important; /* sólido */
+  backdrop-filter: none !important;
+
+  border-bottom: 2px solid rgba(255,215,0,.35) !important;
+  box-shadow: 0 18px 60px rgba(0,0,0,.55);
+}
+
+/* Evitar “recortes” por safe-area en móviles */
+.top-header{ padding-top: calc(16px + env(safe-area-inset-top)) !important; }
+
+/* Sección pill */
+.section-pill{
+  border-radius: 999px !important;
+  border: 1px solid rgba(255,255,255,.14) !important;
+  background: rgba(255,255,255,.06) !important;
+  box-shadow: 0 0 30px rgba(255,215,0,.08);
+}
+
+/* Cards y cajas: facelift grande */
+.card, .info-box, .urban-card, .diagram-box, .mission-panel, .video-container, .review-box{
+  border-radius: var(--radius-xl) !important;
+  border: 1px solid rgba(255,255,255,.12) !important;
+  background: rgba(0,0,0,.40) !important;
+  box-shadow: var(--shadow-xl);
+}
+
+.card:hover, .info-box:hover, .urban-card:hover{
+  transform: translateY(-2px);
+  transition: transform .18s ease, box-shadow .18s ease;
+  box-shadow: 0 30px 95px rgba(0,0,0,.62);
+}
+
+/* Inputs más premium */
+input, select, textarea{
+  border-radius: var(--radius-md) !important;
+  border: 1px solid rgba(255,255,255,.14) !important;
+  background: rgba(0,0,0,.35) !important;
+}
+input:focus, select:focus, textarea:focus{
+  outline: none !important;
+  box-shadow: var(--ring) !important;
+  border-color: rgba(255,215,0,.35) !important;
+}
+
+/* Botones y links */
+button, .btn, .action-btn, .primary-btn, .secondary-btn{
+  border-radius: var(--radius-md) !important;
+}
+button:focus-visible, a:focus-visible{
+  outline: none !important;
+  box-shadow: var(--ring) !important;
+}
+
+/* HUD botones */
+.hud-btn{
+  border-radius: 14px !important;
+  border: 1px solid rgba(255,255,255,.14) !important;
+  background: rgba(255,255,255,.06) !important;
+}
+
+/* Scrollbars (desktop) */
+@media (min-width: 981px){
+  .main-content::-webkit-scrollbar, .sidebar-scroll::-webkit-scrollbar{ width: 10px; }
+  .main-content::-webkit-scrollbar-thumb, .sidebar-scroll::-webkit-scrollbar-thumb{
+    background: rgba(255,255,255,.16);
+    border-radius: 999px;
+    border: 2px solid rgba(0,0,0,.45);
+  }
+  .main-content::-webkit-scrollbar-thumb:hover, .sidebar-scroll::-webkit-scrollbar-thumb:hover{
+    background: rgba(255,255,255,.22);
+  }
+}
+
+/* Tema alternativo (con botón “Tema”) */
+body.theme-cyber{
+  --gold-primary: #00ffd1 !important;
+}
+body.theme-cyber .sidebar{
+  border-right-color: rgba(0,255,209,.35) !important;
+}
+body.theme-cyber .top-header{
+  border-bottom-color: rgba(0,255,209,.35) !important;
+}
+
+/* Móvil: layout vertical (se mantiene) */
+@media (max-width: 980px){
+  html, body{ height: auto !important; overflow: auto !important; }
+  .sidebar{
+    position: sticky !important;
+    width: 100% !important;
+    height: auto !important;
+    border-right: none !important;
+    border-bottom: 2px solid rgba(255,215,0,.35) !important;
+  }
+  .main-content{
+    position: static !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+}
