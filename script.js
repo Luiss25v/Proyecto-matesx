@@ -1878,3 +1878,59 @@ function genPractice(topic){
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run);
   else run();
 })();
+
+
+/* ==========================================================
+   FINAL POLISH: Tema + Pantalla completa (sin romper nada)
+   ========================================================== */
+(function initThemeAndFullscreen(){
+  function ready(fn){
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn);
+    else fn();
+  }
+  ready(function(){
+    // Theme toggle
+    const themeBtn = document.getElementById("themeBtn");
+    const THEME_KEY = "mc_theme";
+    function applyTheme(t){
+      document.body.classList.toggle("theme-cyber", t === "cyber");
+      if (themeBtn){
+        themeBtn.title = (t === "cyber") ? "Tema: Cyber" : "Tema: Dorado";
+        themeBtn.innerHTML = (t === "cyber") ? '<i class="fas fa-wand-magic-sparkles"></i>' : '<i class="fas fa-palette"></i>';
+      }
+    }
+    if (themeBtn){
+      let theme = "gold";
+      try{ theme = localStorage.getItem(THEME_KEY) || "gold"; }catch(e){}
+      applyTheme(theme);
+      themeBtn.addEventListener("click", function(){
+        theme = (theme === "cyber") ? "gold" : "cyber";
+        try{ localStorage.setItem(THEME_KEY, theme); }catch(e){}
+        applyTheme(theme);
+        try{ showToast(theme === "cyber" ? "Tema activado: Cyber" : "Tema activado: Dorado"); }catch(e){}
+      });
+    }
+
+    // Fullscreen toggle (solo si el navegador lo permite)
+    const fsBtn = document.getElementById("fsBtn");
+    function isFS(){ return !!document.fullscreenElement; }
+    function updateFSIcon(){
+      if (!fsBtn) return;
+      fsBtn.title = isFS() ? "Salir de pantalla completa" : "Pantalla completa";
+      fsBtn.innerHTML = isFS() ? '<i class="fas fa-compress"></i>' : '<i class="fas fa-expand"></i>';
+    }
+    if (fsBtn && document.documentElement.requestFullscreen){
+      updateFSIcon();
+      fsBtn.addEventListener("click", async function(){
+        try{
+          if (!isFS()) await document.documentElement.requestFullscreen();
+          else await document.exitFullscreen();
+        }catch(e){}
+        updateFSIcon();
+      });
+      document.addEventListener("fullscreenchange", updateFSIcon);
+    }else if (fsBtn){
+      fsBtn.style.display = "none";
+    }
+  });
+})();
