@@ -1,3 +1,14 @@
+// --- Layout stability: keep header height in CSS var (prevents motto clipping) ---
+function updateTopbarHeight(){
+  const header = document.querySelector('.top-header');
+  if (!header) return;
+  const h = Math.ceil(header.getBoundingClientRect().height);
+  if (h > 0){
+    document.documentElement.style.setProperty('--topbar-height', h + 'px');
+  }
+}
+window.addEventListener('resize', ()=>requestAnimationFrame(updateTopbarHeight), { passive:true });
+
 // ACTIVAR COLOREADO DE CÓDIGO
 document.addEventListener('DOMContentLoaded', () => {
     if (window.hljs && typeof window.hljs.highlightAll === 'function') {
