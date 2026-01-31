@@ -2195,3 +2195,17 @@ body{
   padding-top: 0 !important;
 }
 
+
+/* ===== FINAL FIX: REMOVE HEADER GAP =====
+   The header (.top-header) lives INSIDE .main-content.
+   Therefore .main-content must NOT have padding-top, otherwise it pushes the header down
+   and makes it look like it's floating/cut.
+*/
+.main-content{ padding-top: 0 !important; }
+
+.top-header{
+  margin-top: 0 !important;
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+}
+
