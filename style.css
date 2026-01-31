@@ -1872,23 +1872,7 @@ body{ margin:0; display:flex; align-items: stretch; }
 :root{
   --topbar-height: 96px;
 }
-.top-header{
-  position: fixed !important;
-  top: 0 !important;
-  left: var(--sidebar-width) !important;
-  right: 0 !important;
-  height: var(--topbar-height) !important;
-  z-index: 4000 !important;
-  background: rgba(0,0,0,0.72) !important;
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255,255,255,0.10);
-}
-
 /* El contenido se baja para no quedar debajo del header fijo */
-.main-content{
-  padding-top: var(--topbar-height) !important;
-}
-
 /* Ajuste de la pastilla de sección al modo fijo */
 .section-pill{
   position: absolute !important;
@@ -1903,8 +1887,7 @@ body{ margin:0; display:flex; align-items: stretch; }
     left: 0 !important;
     height: var(--topbar-height) !important;
   }
-  .main-content{ padding-top: var(--topbar-height) !important; }
-}
+  }
 
 
 /* =========================
@@ -2175,11 +2158,6 @@ body.theme-cyber .top-header{
 }
 
 /* Ensure content is pushed below header */
-.main-content{
-  padding-top: var(--topbar-height) !important;
-}
-
-
 /* ===== FINAL FIX: TOPBAR FLUSH (no floating gap) ===== */
 .topbar{
   top: 0 !important;
@@ -2207,5 +2185,53 @@ body{
   margin-top: 0 !important;
   border-top-left-radius: 0 !important;
   border-top-right-radius: 0 !important;
+}
+
+
+/* ============================================================
+   FINAL DEFINITIVE LAYOUT LOCK (NO GAP / NO FLOATING HEADER)
+   - Page scroll disabled (only center panel scrolls)
+   - Sidebar stays fixed-height
+   - Header is sticky INSIDE main-content and FLUSH to top
+   ============================================================ */
+html, body{
+  height: 100% !important;
+}
+body{
+  margin: 0 !important;
+  overflow: hidden !important; /* IMPORTANT: prevents body scroll that creates "floating" feel */
+}
+.sidebar{
+  height: 100vh !important;
+  top: 0 !important;
+}
+.main-content{
+  flex: 1 1 auto !important;
+  height: 100vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+.top-header{
+  position: sticky !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  margin: 0 !important;
+  border-radius: 0 !important; /* removes card-floating look */
+  background: #050505 !important; /* solid */
+  backdrop-filter: none !important;
+}
+/* Keep content spacing below header without moving the header */
+.content-body-full{
+  padding-top: 24px !important;
+}
+/* Motto stays inside header and sits just above the gold line */
+.top-header .motto{
+  display: block !important;
+  margin-top: 6px !important;
+  margin-bottom: 0 !important;
 }
 
