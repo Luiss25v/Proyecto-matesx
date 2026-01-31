@@ -131,7 +131,6 @@ document.addEventListener("DOMContentLoaded", () => {
   try{ initXpBadge(); }catch(e){}
   try{ initQuickSearch(); }catch(e){}
   try{ initVideoSection(); }catch(e){}
-  try{ initPractice(); }catch(e){}
   try{ renderReviews(); }catch(e){}
   // pair-builder sync on blur
   [["class","classMap"],["inv","invMap"],["compF","compMapF"],["compG","compMapG"]].forEach(([p,id])=>{
@@ -401,7 +400,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // --- DICCIONARIO DE COLORES NEÓN VIBRANTES ---
 const sectionColors = {
-  practica: "#00FFC8",
     'inicio': '#FFD700',          // Dorado (Original)
     'prod-cartesiano': '#00FF00', // Verde Matrix
     'funciones': '#ff001e',       // <--- CAMBIO AQUÍ: ROJO NEÓN
@@ -1290,10 +1288,7 @@ function toEmbedUrl(raw){
   return u;
 }
 
-function initVideoSection() {
-  // Always start blank (no default video)
-  try{ localStorage.removeItem("mc_video_url"); }catch(e){}
-
+function initVideoSection(){
   const input = document.getElementById("videoInput");
   const loadBtn = document.getElementById("videoLoadBtn");
   const clearBtn = document.getElementById("videoClearBtn");
