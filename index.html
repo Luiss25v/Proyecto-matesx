@@ -37,7 +37,9 @@
         <div class="sidebar-search">
             <i class="fas fa-search"></i>
             <input id="sidebarSearch" type="text" placeholder="Buscar sección..." autocomplete="off" /><button id="sidebarSearchBtn" class="search-btn" type="button" title="Buscar"><i class="fas fa-arrow-right"></i></button>
-        </div>
+        
+      <div id="sidebarSearchResults" class="search-results" aria-live="polite"></div>
+    </div>
 
         <nav>
             <ul>
@@ -49,6 +51,7 @@
                 <li><a href="#" class="tab-link" onclick="openTab(event, 'inversa')"><i class="fas fa-exchange-alt"></i> Función Inversa</a></li>
                 <li><a href="#" class="tab-link" onclick="openTab(event, 'compuesta')"><i class="fas fa-layer-group"></i> Función Compuesta</a></li>
                 <li><a href="#" class="tab-link" onclick="openTab(event, 'discreta')"><i class="fas fa-chart-bar"></i> Función Discreta</a></li>
+                <li><a href="#" class="tab-link" onclick="openTab(event, 'practica')"><i class="fas fa-bullseye"></i> Modo Práctica</a></li>
                 <li><a href="#" class="tab-link" onclick="openTab(event, 'video')"><i class="fas fa-play-circle"></i> Video Explicativo</a></li>
                 <li><a href="#" class="tab-link" onclick="openTab(event, 'resenas')"><i class="fas fa-comments"></i> Reseñas</a></li>
             </ul>
@@ -567,6 +570,86 @@ C (ej: a->X,b->Y,c->Z)">
             <!-- SECCIÓN: VIDEO -->
             <!-- ============================= -->
             
+
+<div id="practica" class="tab-content" style="display:none;">
+  <div class="topic-header">
+    <h2>MODO PRÁCTICA</h2>
+    <span class="badge">INTERACTIVO</span>
+  </div>
+
+  <div class="grid-2 practice-grid">
+    <div class="card practice-card">
+      <h1 class="urban-title">Generador de retos</h1>
+      <p class="muted">Elige una sección, genera un reto y resuélvelo. Recibes XP por respuestas correctas y puedes cargar el reto directamente en la sección correspondiente.</p>
+
+      <div class="form-row">
+        <label class="label">Sección</label>
+        <select id="practiceTopic" class="select">
+          <option value="prod-cartesiano">Producto cartesiano</option>
+          <option value="clasificacion">Clasificación</option>
+          <option value="inversa">Función inversa</option>
+          <option value="compuesta">Función compuesta</option>
+          <option value="discreta">Función discreta</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label class="label">Dificultad</label>
+        <select id="practiceLevel" class="select">
+          <option value="1">Nivel 1 (rápido)</option>
+          <option value="2">Nivel 2 (normal)</option>
+          <option value="3">Nivel 3 (reto)</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <button class="btn primary" id="practiceNew"><i class="fas fa-dice"></i> Nuevo reto</button>
+        <button class="btn" id="practiceLoad"><i class="fas fa-upload"></i> Cargar en sección</button>
+        <button class="btn danger" id="practiceReset"><i class="fas fa-trash"></i> Reiniciar</button>
+      </div>
+
+      <div class="callout" id="practiceHint">
+        Tip: presiona <b>Nuevo reto</b>, responde y luego usa <b>Cargar en sección</b> para ver la solución en el módulo real.
+      </div>
+    </div>
+
+    <div class="card practice-card">
+      <h1 class="urban-title">Reto actual</h1>
+
+      <div class="practice-panel">
+        <div class="practice-prompt" id="practicePrompt">
+          <div class="video-placeholder" style="min-height:180px;">
+            <div class="ph-title">Aún no hay reto</div>
+            <div class="ph-sub">Genera un reto para empezar.</div>
+          </div>
+        </div>
+
+        <div class="practice-answer">
+          <label class="label">Tu respuesta</label>
+          <input id="practiceAnswer" type="text" placeholder="Escribe tu respuesta aquí..." />
+          <div class="row">
+            <button class="btn primary" id="practiceCheck"><i class="fas fa-check"></i> Evaluar</button>
+            <button class="btn" id="practiceReveal"><i class="fas fa-eye"></i> Ver solución</button>
+          </div>
+          <div id="practiceFeedback" class="practice-feedback"></div>
+        </div>
+
+        <div class="matlab-box">
+          <div class="matlab-head">
+            <div class="matlab-title"><i class="fas fa-code"></i> MATLAB generado</div>
+            <div class="matlab-actions">
+              <button class="btn mini" id="practiceCopy"><i class="fas fa-copy"></i> Copiar</button>
+              <button class="btn mini" id="practiceDownload"><i class="fas fa-download"></i> Descargar .m</button>
+            </div>
+          </div>
+          <pre><code id="practiceMatlab" class="matlab-code">% Genera un reto para ver el código MATLAB aquí.</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <div id="video" class="tab-content" style="display:none;">
   <div class="topic-header">
     <h2>VIDEO EXPLICATIVO</h2>
@@ -673,5 +756,57 @@ C (ej: a->X,b->Y,c->Z)">
 
 
 </div>
+
+<div id="profileModal" class="modal" aria-hidden="true">
+  <div class="modal-backdrop" data-close="profileModal"></div>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
+    <div class="modal-head">
+      <div class="modal-title" id="profileTitle"><i class="fas fa-user-astronaut"></i> Panel de jugador</div>
+      <button class="icon-btn" type="button" data-close="profileModal" title="Cerrar"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="grid-2">
+        <div class="card mini">
+          <h3><i class="fas fa-star"></i> Progreso</h3>
+          <div class="kv"><span>Nivel</span><b id="profLevel">1</b></div>
+          <div class="kv"><span>XP</span><b id="profXp">0</b></div>
+          <div class="kv"><span>Racha</span><b id="profStreak">1</b></div>
+          <div class="kv"><span>Secciones completas</span><b id="profDone">0</b></div>
+        </div>
+        <div class="card mini">
+          <h3><i class="fas fa-keyboard"></i> Atajos</h3>
+          <ul class="shortcuts">
+            <li><code>/</code> Buscar</li>
+            <li><code>Enter</code> Abrir primer resultado</li>
+            <li><code>Esc</code> Cerrar / limpiar</li>
+            <li><code>Ctrl</code>+<code>K</code> Búsqueda rápida</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout warn">
+        <b>Reiniciar progreso</b>: borra XP, racha y completados (no elimina el código).
+      </div>
+      <div class="row">
+        <button class="btn danger" id="resetProgressBtn"><i class="fas fa-trash"></i> Reiniciar progreso</button>
+        <button class="btn" data-close="profileModal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="quickSearchModal" class="modal" aria-hidden="true">
+  <div class="modal-backdrop" data-close="quickSearchModal"></div>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="qsTitle">
+    <div class="modal-head">
+      <div class="modal-title" id="qsTitle"><i class="fas fa-magnifying-glass"></i> Búsqueda rápida</div>
+      <button class="icon-btn" type="button" data-close="quickSearchModal" title="Cerrar"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input id="qsInput" class="qs-input" type="text" placeholder="Escribe para buscar secciones..." autocomplete="off" />
+      <div id="qsResults" class="qs-results"></div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
