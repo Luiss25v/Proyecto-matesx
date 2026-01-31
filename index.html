@@ -36,8 +36,7 @@
         <div class="sidebar-scroll">
         <div class="sidebar-search">
             <i class="fas fa-search"></i>
-            <input id="sidebarSearch" type="text" placeholder="Buscar sección..." autocomplete="off" />
-      <button id="searchBtn" class="search-btn" type="button" title="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+            <input id="sidebarSearch" type="text" placeholder="Buscar sección..." autocomplete="off" /><button id="sidebarSearchBtn" class="search-btn" type="button" title="Buscar"><i class="fas fa-arrow-right"></i></button>
         </div>
 
         <nav>
@@ -91,7 +90,7 @@
   <div class="xp-bar"><span id="xpBar"></span></div>
   <div class="xp-row">
     <span class="streak" title="Racha diaria"><i class="fas fa-fire"></i> <span id="streakValue">1</span></span>
-    <button id="achBtn" class="hud-btn" type="button" title="Ver logros"><i class="fas fa-trophy"></i></button>
+    <button id="trophyBtn" class="hud-btn" type="button" title="Logros"><i class="fas fa-trophy"></i></button>
     <button id="soundBtn" class="hud-btn" type="button" title="Sonido: off"><i class="fas fa-volume-mute"></i></button>
   
     <button id="themeBtn" class="hud-btn" type="button" title="Tema"><i class="fas fa-palette"></i></button>
@@ -660,6 +659,21 @@ C (ej: a->X,b->Y,c->Z)">
 
     <!-- Achievement Popup -->
     <div id="achPopup" class="ach-popup" aria-live="polite" aria-atomic="true"></div>
+
+
+<div class="modal" id="achievementsModal" aria-hidden="true">
+  <div class="modal-backdrop" data-close="achievementsModal"></div>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="achievementsTitle">
+    <div class="modal-head">
+      <div class="modal-title" id="achievementsTitle"><i class="fas fa-trophy"></i> Logros</div>
+      <button class="icon-btn" type="button" data-close="achievementsModal" title="Cerrar"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="achievementsBody"></div>
+    <div class="modal-foot">
+      <button class="btn" type="button" data-close="achievementsModal">Cerrar</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
