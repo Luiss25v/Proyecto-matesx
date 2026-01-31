@@ -136,6 +136,9 @@ h1, h2, h3, h4, h5, h6, .urban-title, .mega-title {
 .university-info h2 { font-size: 1rem; color: white !important; }
 .motto { font-size: 0.9rem; font-style: italic; color: #bbb !important; }
 
+    width: 100%;
+    margin: 0;
+.content-body { padding: 50px; }
 @keyframes slideIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
 /* --- BIENVENIDA --- */
@@ -1173,6 +1176,12 @@ h2::before{
 }
 
 /* Contenedor principal: aire y consistencia */
+.content-body{
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 22px 18px 30px;
+}
+
 /* Cards: borde neón con pseudo-elemento */
 .info-box, .urban-card, .diagram-box, .matlab-panel, .review-card, .exercise-card{
     position: relative;
@@ -1399,18 +1408,6 @@ body{
     overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
-}
-
-.main-content{
-    height: var(--app-height);
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding-left: 0;
-    margin-left: var(--sidebar-width);
-    width: calc(100% - var(--sidebar-width));
-width: 100%;
-    overscroll-behavior: contain;
-    scrollbar-gutter: stable;
 }
 
 .fx-overlay{
@@ -1763,24 +1760,11 @@ width: 100%;
    GAPFIX: evita espacio vacío a la izquierda (desktop)
    ========================= */
 @media (min-width: 981px){
-  .main-content{
-    padding-left: 0 !important;
-    margin-left: var(--sidebar-width) !important;
-    width: calc(100% - var(--sidebar-width)) !important;
-  }
+  
   .top-header .section-pill{
     left: 18px !important;
   }
 }
-
-@media (min-width: 981px){
-  .section-pill{ left: 18px !important; }
-}
-
-@media (max-width: 980px){
-  .main-content{ margin-left: 0 !important; width: 100% !important; }
-}
-
 
 /* =========================
    LAYOUT CLEAN OVERRIDES v24
@@ -1835,94 +1819,84 @@ body{
 
 
 /* =========================
-   GAP FIX (rename): content-body-full
-   Esta clase reemplaza a .content-body para evitar reglas viejas centradas.
+   FULLWIDTH FIX v26
+   Quita el centrado (max-width + margin auto) que crea un "vacío" lateral.
    ========================= */
-.content-body-full{
-  width: 100% !important;
-  max-width: none !important;
+.content-body{
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 24px 24px 34px !important;
+    box-sizing: border-box !important;
+}
+
+/* En pantallas grandes, un poquito más de aire */
+@media (min-width: 1400px){
+  .content-body{ padding-left: 36px !important; padding-right: 36px !important; }
+}
+
+
+/* =========================
+   DEFINITIVE FIX v27
+   - sin hueco lateral: main-content ocupa el espacio restante del flex
+   ========================= */
+body{ display:flex !important; }
+.sidebar{ flex: 0 0 var(--sidebar-width) !important; }
+.main-content{
+  flex: 1 1 auto !important;
+  width: auto !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+
+/* =========================
+   TRUE GAP FIX v28 (autoridad)
+   - Sin hueco a la izquierda
+   - Sidebar estable
+   - Scroll en main-content
+   ========================= */
+html, body{
+  height: var(--app-height) !important;
+  overflow: hidden !important;
+}
+
+body{
   margin: 0 !important;
-  padding: 24px 24px 34px !important;
+  display: flex !important;
+}
+
+/* Sidebar ocupa solo su ancho, sin fixed ni márgenes raros */
+.sidebar{
+  position: relative !important;
+  flex: 0 0 var(--sidebar-width) !important;
+  width: var(--sidebar-width) !important;
+  height: var(--app-height) !important;
+}
+
+/* Contenedor principal ocupa el resto, pegado a sidebar */
+.main-content{
+  flex: 1 1 auto !important;
+  height: var(--app-height) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: auto !important;
+}
+
+/* El body interno del contenido debe ser full-width (sin centrado) */
+.content-body{
+  max-width: none !important;
+  width: 100% !important;
+  margin: 0 !important;
   box-sizing: border-box !important;
 }
-@media (min-width: 1400px){
-  .content-body-full{ padding-left: 36px !important; padding-right: 36px !important; }
-}
 
-
-/* =========================
-   Layout estable (autoridad)
-   ========================= */
-html, body{ height: var(--app-height); overflow: hidden; width: 100%; }
-body{ margin:0; display:flex; align-items: stretch; }
-.sidebar{ flex: 0 0 var(--sidebar-width); width: var(--sidebar-width); height: var(--app-height); position: relative; }
-.main-content{ flex: 1 1 auto; height: var(--app-height); overflow-y: auto; overflow-x: hidden; padding:0; margin:0; width:auto; }
+/* Móvil: vuelve al flujo normal */
 @media (max-width: 980px){
-  html, body{ height:auto; overflow:auto; }
-  body{ display:block; }
-  .sidebar{ width:100%; height:auto; position: sticky; top:0; }
-  .main-content{ height:auto; overflow:visible; }
-}
-
-
-/* =========================
-   TOPBAR FIX v31
-   - barra superior fija (no se mueve)
-   ========================= */
-:root{
-  --topbar-height: 96px;
-}
-.top-header{
-  position: fixed !important;
-  top: 0 !important;
-  left: var(--sidebar-width) !important;
-  right: 0 !important;
-  height: var(--topbar-height) !important;
-  z-index: 4000 !important;
-  background: rgba(0,0,0,0.72) !important;
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255,255,255,0.10);
-}
-
-/* El contenido se baja para no quedar debajo del header fijo */
-.main-content{
-  padding-top: var(--topbar-height) !important;
-}
-
-/* Ajuste de la pastilla de sección al modo fijo */
-.section-pill{
-  position: absolute !important;
-  left: 16px !important;
-  top: 14px !important;
-}
-
-/* Móvil: el header ocupa todo el ancho */
-@media (max-width: 980px){
-  :root{ --topbar-height: 104px; }
-  .top-header{
-    left: 0 !important;
-    height: var(--topbar-height) !important;
-  }
-  .main-content{ padding-top: var(--topbar-height) !important; }
-}
-
-
-/* =========================
-   TOPBAR SOLID v32
-   - sin transparencia (no flota)
-   ========================= */
-.top-header{
-  background: #070707 !important;
-  backdrop-filter: none !important;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.55) !important;
-}
-.top-header::after{
-  content:"";
-  position:absolute;
-  left:0; right:0; bottom:-1px;
-  height:1px;
-  background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.16), rgba(255,255,255,0));
-}
-.motto{
-  opacity: 0.92;
+  html, body{ height: auto !important; overflow: auto !important; }
+  body{ display: block !important; }
+  .sidebar{ width: 100% !important; height: auto !important; position: sticky !important; top: 0; }
+  .main-content{ height: auto !important; overflow: visible !important; }
 }
