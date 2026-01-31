@@ -1,3 +1,4 @@
+
 // --- Layout stability: keep header height in CSS var (prevents motto clipping) ---
 function updateTopbarHeight(){
   const header = document.querySelector('.top-header');
