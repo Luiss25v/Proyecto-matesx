@@ -2179,3 +2179,19 @@ body.theme-cyber .top-header{
   padding-top: var(--topbar-height) !important;
 }
 
+
+/* ===== FINAL FIX: TOPBAR FLUSH (no floating gap) ===== */
+.topbar{
+  top: 0 !important;
+  margin-top: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.55) !important;
+}
+.main{
+  top: 0 !important;
+}
+/* Ensure the very top area is filled by the header (no transparent gap) */
+body{
+  padding-top: 0 !important;
+}
+
