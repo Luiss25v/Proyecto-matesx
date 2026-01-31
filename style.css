@@ -2383,3 +2383,97 @@ body{
 }
 .ach-text b{ color: rgba(255,255,255,0.94); }
 .ach-text div{ color: rgba(255,255,255,0.74); font-size: .95rem; }
+
+
+/* ===== Video section (blank by default) ===== */
+.video-controls{
+  display:flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 14px 0 12px;
+}
+#videoInput{
+  flex: 1 1 320px;
+  min-width: 240px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(0,0,0,0.25);
+  color: rgba(255,255,255,0.92);
+  outline: none;
+}
+#videoInput:focus{
+  box-shadow: 0 0 0 3px rgba(0,255,200,0.18);
+  border-color: rgba(0,255,200,0.45);
+}
+.video-actions{ display:flex; gap: 10px; }
+.video-placeholder{
+  width: 100%;
+  min-height: 260px;
+  display:flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 14px;
+  border: 1px dashed rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.03);
+  color: rgba(255,255,255,0.75);
+  padding: 18px;
+}
+.video-placeholder .ph-title{
+  font-family: var(--font-headers);
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.92);
+}
+.video-placeholder .ph-sub{
+  text-align:center;
+  color: rgba(255,255,255,0.68);
+}
+
+
+/* ===== HUD polish (no deformation) ===== */
+.xp-badge{ max-width: 340px; }
+.xp-row{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.xp-top{ white-space: nowrap; }
+.hud-btn i{ pointer-events:none; }
+
+/* ===== Responsive stability ===== */
+@media (max-width: 1100px){
+  .top-header{ padding: 14px 18px; }
+  .logo-area{ gap: 16px; }
+  .logo-area img{ height: 56px; }
+  .xp-badge{ max-width: 290px; }
+}
+@media (max-width: 860px){
+  .main-content{ width: 100vw; }
+  .sidebar{
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    transform: translateX(-105%);
+    z-index: 6000;
+    box-shadow: 0 40px 160px rgba(0,0,0,0.85);
+  }
+  body.sidebar-open .sidebar{ transform: translateX(0); }
+  body.sidebar-open::before{
+    content:"";
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 5900;
+  }
+  .sidebar-toggle{ display:inline-flex; }
+}
+@media (max-width: 520px){
+  .xp-badge{ max-width: 220px; }
+  .top-header{ padding: 12px 12px; }
+  .section-pill{ display:none; }
+  .hud-btn{ width: 32px; height: 32px; border-radius: 10px; }
+}
+
