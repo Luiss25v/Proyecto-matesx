@@ -566,29 +566,40 @@ C (ej: a->X,b->Y,c->Z)">
             <!-- ============================= -->
             <!-- SECCIÓN: VIDEO -->
             <!-- ============================= -->
-            <div id="video" class="tab-content" style="display:none;">
-                <div class="topic-header">
-                    <h2>VIDEO
-<div class="video-wrap">
-  <iframe src="https://www.youtube.com/embed/LVeErySORcg" title="YouTube video" frameborder="0"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-    allowfullscreen></iframe>
+            
+<div id="video" class="tab-content" style="display:none;">
+  <div class="topic-header">
+    <h2>VIDEO EXPLICATIVO</h2>
+    <span class="badge">BONUS</span>
+  </div>
+
+  <div class="card">
+    <h1 class="urban-title">Carga tu video</h1>
+    <p class="muted">
+      Pega un enlace (YouTube / youtu.be / embed). No hay ningún video cargado por defecto.
+    </p>
+
+    <div class="video-controls">
+      <input id="videoInput" type="text" placeholder="https://www.youtube.com/watch?v=..." />
+      <div class="video-actions">
+        <button class="btn" id="videoLoadBtn">Cargar</button>
+        <button class="btn btn-secondary" id="videoClearBtn">Quitar</button>
+      </div>
+    </div>
+
+    <div class="video-wrap" id="videoPreviewWrap">
+      <div class="video-placeholder" id="videoPlaceholder">
+        <div class="ph-title">Sin video</div>
+        <div class="ph-sub">Pega un enlace arriba y presiona <b>Cargar</b>.</div>
+      </div>
+      <!-- iframe se inserta dinámicamente -->
+    </div>
+  </div>
 </div>
-</h2>
-                    <span class="badge">BONUS</span>
-                </div>
 
-                <div class="card">
-                    <h1 class="urban-title">Explicación rápida</h1>
-                    <div class="video-wrap">
-                        <iframe class="video-iframe" src="https://www.youtube.com/embed/6gFQZl2xg5Y" title="Funciones" frameborder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                    </div>
-                </div>
-            </div>
+<!-- ============================= -->
+<!-- SECCIÓN: RESEÑAS -->
 
-            <!-- ============================= -->
-            <!-- SECCIÓN: RESEÑAS -->
             <!-- ============================= -->
             <div id="resenas" class="tab-content" style="display:none;">
                 <div class="topic-header">
@@ -661,19 +672,6 @@ C (ej: a->X,b->Y,c->Z)">
     <div id="achPopup" class="ach-popup" aria-live="polite" aria-atomic="true"></div>
 
 
-<div class="modal" id="achievementsModal" aria-hidden="true">
-  <div class="modal-backdrop" data-close="achievementsModal"></div>
-  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="achievementsTitle">
-    <div class="modal-head">
-      <div class="modal-title" id="achievementsTitle"><i class="fas fa-trophy"></i> Logros</div>
-      <button class="icon-btn" type="button" data-close="achievementsModal" title="Cerrar"><i class="fas fa-times"></i></button>
-    </div>
-    <div class="modal-body" id="achievementsBody"></div>
-    <div class="modal-foot">
-      <button class="btn" type="button" data-close="achievementsModal">Cerrar</button>
-    </div>
-  </div>
 </div>
-
 </body>
 </html>
