@@ -1,3 +1,4 @@
+
 // --- Layout stability: keep header height in CSS var (prevents motto clipping) ---
 function updateTopbarHeight(){
   const header = document.querySelector('.top-header');
@@ -1343,7 +1344,8 @@ function setCurrentSection(tabName){
 
     function norm(s){ return (s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,""); }
 
-    function apply(){
+    // Enter opens first match
+  function apply(){
       const q = norm(input.value.trim());
       items.forEach(li=>{
         const txt = norm(li.textContent);
@@ -1352,6 +1354,12 @@ function setCurrentSection(tabName){
     }
 
     input.addEventListener("input", apply);
+  input.addEventListener("keydown", (e)=>{
+    if (e.key === "Enter"){
+      const first = document.querySelector(".sidebar .nav-item:not(.hidden)");
+      if (first){ first.click(); document.body.classList.remove("menu-open"); }
+    }
+  });
 
     // Atajo: "/" enfoca buscador
     document.addEventListener("keydown", (e)=>{
@@ -1945,154 +1953,3 @@ function genPractice(topic){
     }
   });
 })();
-/* ===== Sidebar drawer for small screens ===== */
-function toggleSidebar(force){
-  const open = document.body.classList.contains("sidebar-open");
-  const next = (typeof force === "boolean") ? force : !open;
-  document.body.classList.toggle("sidebar-open", next);
-}
-/* ===== Video loader (no default YouTube) ===== */
-function normalizeYouTube(url){
-  const u = (url||"").trim();
-  if (!u) return "";
-  // Accept embed already
-  if (u.includes("youtube.com/embed/")) return u;
-  // youtu.be/ID
-  let m = u.match(/youtu\.be\/([A-Za-z0-9_-]{6,})/);
-  if (m) return `https://www.youtube.com/embed/${m[1]}`;
-  // youtube.com/watch?v=ID
-  m = u.match(/[?&]v=([A-Za-z0-9_-]{6,})/);
-  if (m) return `https://www.youtube.com/embed/${m[1]}`;
-  // last: if user pasted ID
-  if (/^[A-Za-z0-9_-]{6,}$/.test(u)) return `https://www.youtube.com/embed/${u}`;
-  return "";
-}
-function initVideo(){
-  const url = document.getElementById("videoUrl");
-  const loadBtn = document.getElementById("videoLoadBtn");
-  const exBtn = document.getElementById("videoExampleBtn");
-  const clearBtn = document.getElementById("videoClearBtn");
-  const frame = document.getElementById("videoFrame");
-  const empty = document.getElementById("videoEmpty");
-  if (!url || !loadBtn || !frame || !empty) return;
-
-  function setVideo(src){
-    if (!src){
-      frame.src = "";
-      frame.classList.add("hidden");
-      empty.classList.remove("hidden");
-      try{ localStorage.removeItem("mc_video_src"); }catch(e){}
-      return;
-    }
-    frame.src = src;
-    frame.classList.remove("hidden");
-    empty.classList.add("hidden");
-    try{ localStorage.setItem("mc_video_src", src); }catch(e){}
-  }
-
-  loadBtn.addEventListener("click", ()=>{
-    const src = normalizeYouTube(url.value);
-    if (!src){
-      showToast("Enlace inválido. Pega un link de YouTube.");
-      return;
-    }
-    setVideo(src);
-    showToast("Video cargado.");
-  });
-
-  exBtn?.addEventListener("click", ()=>{
-    url.value = "https://youtu.be/LVeErySORcg";
-    const src = normalizeYouTube(url.value);
-    setVideo(src);
-  });
-
-  clearBtn?.addEventListener("click", ()=>{
-    url.value = "";
-    setVideo("");
-    showToast("Video quitado.");
-  });
-
-  // restore saved
-  let saved = "";
-  try{ saved = localStorage.getItem("mc_video_src") || ""; }catch(e){}
-  if (saved) setVideo(saved);
-}
-/* ===== HUD actions: racha, tema, fullscreen ===== */
-function initHudActions(){
-  const themeBtn = document.getElementById("themeBtn");
-  const fsBtn = document.getElementById("fsBtn");
-  const streakBtn = document.getElementById("streakBtn");
-
-  // Theme
-  function applyTheme(t){
-    document.documentElement.dataset.theme = t;
-    try{ localStorage.setItem("mc_theme", t); }catch(e){}
-  }
-  function toggleTheme(){
-    const cur = document.documentElement.dataset.theme || "gold";
-    const next = cur === "gold" ? "cyber" : "gold";
-    applyTheme(next);
-    showToast("Tema: " + next);
-  }
-  if (themeBtn){
-    themeBtn.addEventListener("click", toggleTheme);
-    let saved = "gold";
-    try{ saved = localStorage.getItem("mc_theme") || "gold"; }catch(e){}
-    applyTheme(saved);
-  }
-
-  // Fullscreen
-  if (fsBtn){
-    fsBtn.addEventListener("click", async ()=>{
-      try{
-        if (!document.fullscreenElement){
-          await document.documentElement.requestFullscreen();
-        }else{
-          await document.exitFullscreen();
-        }
-      }catch(e){
-        showToast("Tu navegador bloqueó pantalla completa.");
-      }
-    });
-  }
-
-  // Streak info
-  if (streakBtn){
-    streakBtn.addEventListener("click", ()=>{
-      const st = loadStreak();
-      showToast(`Racha: ${st.count||1} día(s) · Último: ${st.last||todayStr()}`);
-    });
-  }
-}
-/* ===== Search button behavior ===== */
-function initSearchButton(){
-  const btn = document.getElementById("searchBtn");
-  const input = document.getElementById("sidebarSearch");
-  if (!btn || !input) return;
-
-  btn.addEventListener("click", ()=>{
-    // If empty -> focus
-    if (!input.value.trim()){
-      input.focus();
-      showToast("Escribe para filtrar secciones.");
-      return;
-    }
-    // Jump to first visible nav
-    const first = Array.from(document.querySelectorAll(".nav-btn"))
-      .find(b=>b.style.display !== "none");
-    if (first){
-      openTab(first.dataset.tab);
-      input.blur();
-    }else{
-      showToast("Sin resultados.");
-    }
-  });
-}
-
-window.addEventListener("resize", ()=>{
-  try{
-    if (!window.matchMedia("(max-width: 980px)").matches){
-      toggleSidebar(false);
-    }
-  }catch(e){}
-}, { passive:true });
